@@ -1,0 +1,3076 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sorteo Albero y Cal</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#991B1B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Albero y Cal">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --albero: #E5B824;
+      --albero-dark: #C2960C;
+      --cal: #FAF8F5;
+      --carmesi: #991B1B;
+      --carmesi-dark: #7F1D1D;
+      --verde-feria: #166534;
+      --verde-dark: #14532D;
+      --dorado: #D97706;
+      --rojo-impago: #DC2626;
+      --rojo-impago-dark: #991B1B;
+      --texto-oscuro: #1C1917;
+      --borde-tarjeta: #E2D9C8;
+      --sombra: 0 4px 14px rgba(0,0,0,0.08);
+      --sombra-lg: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      background-color: var(--cal);
+      background-image: radial-gradient(#d6cbba 1px, transparent 1px), linear-gradient(to bottom, rgba(229,184,36,0.1) 0%, rgba(250,248,245,1) 400px);
+      background-size: 24px 24px, 100% 100%;
+      color: var(--texto-oscuro);
+      font-family: 'Montserrat', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* BARRA SUPERIOR FIJA: MENÚ Y CONEXIÓN */
+    .top-nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px 4px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .btn-top-menu {
+      background: #FFFFFF;
+      border: 2px solid var(--albero);
+      border-radius: 20px;
+      padding: 7px 16px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--carmesi);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: var(--sombra);
+      transition: all 0.2s;
+    }
+    .btn-top-menu:hover {
+      background: #FEF3C7;
+      transform: translateY(-1px);
+    }
+    .btn-top-menu .menu-bars {
+      font-size: 1.1rem;
+      color: var(--carmesi);
+    }
+
+    .sync-status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #FFFFFF;
+      border: 1px solid #D1D5DB;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #374151;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      cursor: pointer;
+    }
+    .sync-dot { width: 9px; height: 9px; border-radius: 50%; background: #EAB308; }
+    .sync-dot.online { background: #16A34A; box-shadow: 0 0 6px #16A34A; }
+    .sync-dot.offline { background: #DC2626; box-shadow: 0 0 6px #DC2626; }
+
+    /* GUIRNALDA DE FAROLILLOS */
+    .garland {
+      display: flex;
+      justify-content: space-around;
+      padding: 4px 0 2px;
+      overflow: hidden;
+      background: linear-gradient(to bottom, rgba(153,27,27,0.08), transparent);
+    }
+    .lantern {
+      font-size: 1.4rem;
+      animation: swing 3s ease-in-out infinite alternate;
+      transform-origin: top center;
+    }
+    .lantern:nth-child(even) { animation-delay: 1.5s; }
+    @keyframes swing {
+      0% { transform: rotate(-8deg); }
+      100% { transform: rotate(8deg); }
+    }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 0 16px; }
+    header { text-align: center; padding: 10px 0 16px; }
+
+    .badge-top {
+      display: inline-block;
+      background: var(--verde-feria);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 6px;
+      box-shadow: 0 2px 6px rgba(22,101,52,0.3);
+    }
+
+    h1.title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.8rem, 5vw, 2.7rem);
+      font-weight: 800;
+      color: var(--carmesi);
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .subtitle-award {
+      display: inline-block;
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+      border: 2px solid var(--albero);
+      border-radius: 30px;
+      padding: 8px 24px;
+      margin-top: 4px;
+      box-shadow: var(--sombra);
+    }
+    .subtitle-award span.label { font-size: 0.95rem; font-weight: 600; color: #78350F; }
+    .subtitle-award span.amount { font-family: 'Cinzel', serif; font-size: 1.35rem; font-weight: 800; color: var(--carmesi); margin-left: 4px; }
+
+    .top-bar-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .btn-action {
+      background: #fff;
+      border: 1px solid var(--borde-tarjeta);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--texto-oscuro);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: all 0.2s;
+    }
+    .btn-action:hover { background: #FEF3C7; border-color: var(--albero); transform: translateY(-1px); }
+    .btn-action.btn-whatsapp { background: #25D366; color: #fff; border: none; box-shadow: 0 3px 8px rgba(37,211,102,0.35); }
+
+    /* NORMAS E INSTRUCCIONES */
+    .instructions-card {
+      background: #FFFFFF;
+      border-left: 5px solid var(--albero);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 16px 0;
+      box-shadow: var(--sombra);
+    }
+    .instructions-card h3 {
+      font-size: 0.95rem;
+      color: var(--carmesi);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .instructions-card ul { list-style: none; font-size: 0.82rem; line-height: 1.5; color: #44403C; }
+    .instructions-card li { margin-bottom: 7px; position: relative; padding-left: 20px; }
+    .instructions-card li.rule-ok::before { content: "✔"; position: absolute; left: 0; color: var(--verde-feria); font-weight: 700; }
+    .instructions-card li.rule-alert { background: #FFF1F2; border: 1px solid #FECDD3; padding: 8px 10px 8px 24px; border-radius: 8px; color: #9F1239; }
+    .instructions-card li.rule-alert::before { content: "⚠️"; position: absolute; left: 4px; }
+
+    /* MEDIOS DE PAGO BIZUM Y CUENTA BANCARIA */
+    .payment-box {
+      background: #FFFFFF;
+      border: 2px solid var(--albero);
+      border-radius: 14px;
+      padding: 16px;
+      margin: 16px 0;
+      box-shadow: var(--sombra);
+    }
+    .payment-box h3 {
+      font-size: 0.95rem;
+      color: var(--carmesi);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .payment-subtext { font-size: 0.78rem; color: #57534E; margin-bottom: 12px; }
+    .payment-methods-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    @media (max-width: 600px) { .payment-methods-grid { grid-template-columns: 1fr; } }
+    .payment-method-card {
+      background: #FFFBEB;
+      border: 1.5px solid #FDE68A;
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .pay-header { display: flex; align-items: center; gap: 8px; }
+    .pay-icon { font-size: 1.3rem; }
+    .pay-title { font-size: 0.78rem; font-weight: 700; color: #78350F; text-transform: uppercase; }
+    .pay-val {
+      font-family: monospace, sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--carmesi);
+      word-break: break-all;
+      background: #FFFFFF;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #E5E7EB;
+    }
+    .btn-copy-pay {
+      background: #FFFFFF;
+      border: 1px solid var(--albero);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #92400E;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: background 0.15s;
+    }
+    .btn-copy-pay:hover { background: #FEF3C7; }
+
+    .price-tag-banner { text-align: center; margin: 14px 0 10px; }
+    .price-text-red {
+      color: var(--carmesi);
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      background: #FEE2E2;
+      display: inline-block;
+      padding: 6px 20px;
+      border-radius: 20px;
+      border: 1px dashed var(--carmesi);
+    }
+    .legend-bar {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin: 8px 0 14px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      flex-wrap: wrap;
+    }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-color { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+    .legend-free { background: #FFFFFF; border: 1px solid #D1D5DB; }
+    .legend-paid { background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border: 1px solid #C2960C; }
+    .legend-unpaid { background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); border: 1px solid #991B1B; }
+
+    .quick-stats {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin: 6px 0 16px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #57534E;
+      flex-wrap: wrap;
+    }
+    .quick-stats span strong { color: var(--carmesi); }
+
+    /* CUADRÍCULA 00-99 */
+    .grid-wrapper {
+      background: #FFFFFF;
+      border: 2px solid #E7E0D3;
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: var(--sombra-lg);
+      margin-bottom: 22px;
+    }
+    .numbers-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+    @media (max-width: 680px) { .numbers-grid { grid-template-columns: repeat(5, 1fr); gap: 5px; } }
+    @media (max-width: 380px) { .numbers-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; } }
+    .num-cell {
+      aspect-ratio: 1 / 1;
+      border-radius: 10px;
+      border: 1.5px solid #E2D9C8;
+      background: #FAFAF9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s ease;
+      padding: 2px;
+      overflow: hidden;
+    }
+    .num-cell:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .num-cell .number-val { font-family: 'Cinzel', serif; font-size: 1.05rem; font-weight: 700; color: #292524; line-height: 1; }
+    .num-cell .alias-val {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-align: center;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 95%;
+      padding: 1px 3px;
+      border-radius: 4px;
+    }
+    .num-cell.free { background: #FFFFFF; border-color: #E2D9C8; }
+    .num-cell.free:hover { border-color: var(--albero); background: #FEF9C3; }
+    .num-cell.free .alias-val { color: #9CA3AF; font-weight: 500; }
+    .num-cell.taken { background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border-color: var(--albero-dark); box-shadow: inset 0 0 0 1px rgba(194,150,12,0.3); }
+    .num-cell.taken .number-val { color: #78350F; }
+    .num-cell.taken .alias-val { background: var(--carmesi); color: #FFFFFF; }
+    .num-cell.unpaid { background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important; border-color: #991B1B !important; }
+    .num-cell.unpaid .number-val { color: #FFFFFF !important; }
+    .num-cell.unpaid .alias-val { background: #7F1D1D !important; color: #FEE2E2 !important; font-weight: 800; }
+
+    /* DIRECTIVA */
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.25rem;
+      color: var(--carmesi);
+      text-align: center;
+      margin: 24px 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .board-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+    @media (max-width: 768px) { .board-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .board-grid { grid-template-columns: 1fr; } }
+
+    /* PESTAÑAS DE VISTA EN PANEL DIRECTIVA */
+    .admin-tabs-bar {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .admin-tab-btn {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      border: 1.5px solid #D1D5DB;
+      background: #FAFAF9;
+      color: #374151;
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .admin-tab-btn.active {
+      background: var(--albero);
+      border-color: var(--albero-dark);
+      color: #78350F;
+      box-shadow: 0 2px 6px rgba(229,184,36,0.3);
+    }
+
+    /* TARJETAS DEL LISTADO POR PERSONAS */
+    .person-card {
+      background: #FFFFFF;
+      border: 1.5px solid #E5E7EB;
+      border-left: 5px solid var(--carmesi);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .person-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px dashed #E5E7EB;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .person-num-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #FAFAF9;
+      border: 1.5px solid #D1D5DB;
+      padding: 5px 9px;
+      border-radius: 8px;
+      margin: 3px;
+      font-size: 0.75rem;
+    }
+    .person-num-chip.paid { border-color: #16A34A; background: #F0FDF4; }
+    .person-num-chip.unpaid { border-color: #DC2626; background: #FEF2F2; }
+
+    /* BOTONES DE EMOJIS */
+    .emoji-bar {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin: 8px 0;
+      background: #FFFFFF;
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid #FECACA;
+    }
+    .btn-emoji {
+      background: #FAFAF9;
+      border: 1px solid #E5E7EB;
+      border-radius: 6px;
+      font-size: 1.15rem;
+      padding: 4px 7px;
+      cursor: pointer;
+      line-height: 1;
+      transition: transform 0.1s, background 0.15s;
+    }
+    .btn-emoji:hover {
+      transform: scale(1.18);
+      background: #FEF3C7;
+      border-color: var(--albero);
+    }
+
+    /* MODAL PANEL FLASH EMERGENTE CENTRADO */
+    .flash-modal-box {
+      background: linear-gradient(180deg, #FFFDF7 0%, #FFFBEB 100%);
+      border: 3px solid var(--carmesi);
+      border-top: 8px solid var(--carmesi);
+      border-radius: 22px;
+      width: 92%;
+      max-width: 440px;
+      padding: 26px 22px 22px;
+      text-align: center;
+      box-shadow: 0 22px 50px rgba(0,0,0,0.45);
+      margin: auto;
+      position: relative;
+    }
+    .flash-icon-top {
+      font-size: 2.5rem;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .flash-title-text {
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--carmesi);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .flash-body-text {
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.6;
+      color: #1F2937;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #FFFFFF;
+      border: 1.5px dashed var(--albero);
+      border-radius: 14px;
+      padding: 14px 12px;
+      margin-bottom: 14px;
+      max-height: 45vh;
+      overflow-y: auto;
+    }
+    .flash-timer-badge {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #92400E;
+      background: #FEF3C7;
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+    }
+    .btn-flash-understood {
+      display: block;
+      width: 80%;
+      max-width: 240px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, var(--carmesi) 0%, #7F1D1D 100%);
+      color: #FFFFFF;
+      border: 2px solid var(--albero);
+      border-radius: 30px;
+      padding: 12px 24px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(153,27,27,0.35);
+      transition: transform 0.15s;
+    }
+    .btn-flash-understood:active {
+      transform: scale(0.96);
+    }
+    .board-card {
+      background: #FFFFFF;
+      border: 2px solid var(--borde-tarjeta);
+      border-radius: 14px;
+      padding: 16px 14px;
+      text-align: center;
+      box-shadow: var(--sombra);
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .board-card.registered { border-color: var(--verde-feria); background: #F0FDF4; }
+    .board-role { font-size: 0.75rem; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 1px; }
+    .board-alias { font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700; color: var(--carmesi); margin: 8px 0 4px; }
+    .board-status { font-size: 0.72rem; font-weight: 600; padding: 3px 8px; border-radius: 12px; display: inline-block; }
+    .status-free { background: #FEF3C7; color: #92400E; }
+    .status-locked { background: #DCFCE7; color: #166534; }
+
+    /* CALENDARIO */
+    .calendar-card {
+      background: #FFFFFF;
+      border-radius: 16px;
+      border: 1px solid var(--borde-tarjeta);
+      padding: 18px;
+      box-shadow: var(--sombra);
+      margin-bottom: 24px;
+    }
+    .calendar-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-top: 14px; }
+    @media (max-width: 640px) { .calendar-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; } }
+    .month-box {
+      border: 1.5px solid #E5E7EB;
+      border-radius: 10px;
+      padding: 10px 6px;
+      text-align: center;
+      background: #FAFAF9;
+      transition: all 0.2s;
+    }
+    .month-box.has-winner { border-color: var(--albero); background: #FFFBEB; }
+    .month-name { font-size: 0.72rem; font-weight: 700; color: #4B5563; text-transform: uppercase; }
+    .month-day { font-size: 0.65rem; color: var(--carmesi); font-weight: 600; margin-bottom: 4px; }
+    .month-number { font-family: 'Cinzel', serif; font-size: 1.3rem; font-weight: 800; color: var(--carmesi); min-height: 28px; display: flex; align-items: center; justify-content: center; }
+    .month-number.empty { color: #D1D5DB; font-size: 1.1rem; }
+
+    /* MODALES BASE */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-content {
+      background: #FFFFFF;
+      border-radius: 18px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 22px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      border-top: 6px solid var(--carmesi);
+      transform: translateY(20px);
+      transition: transform 0.2s ease;
+    }
+    .modal-overlay.active .modal-content { transform: translateY(0); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-title { font-family: 'Cinzel', serif; font-size: 1.2rem; font-weight: 700; color: var(--carmesi); }
+    .btn-close { background: none; border: none; font-size: 1.5rem; color: #9CA3AF; cursor: pointer; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.78rem; font-weight: 700; color: #374151; margin-bottom: 4px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #D1D5DB;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+    .privacy-notice {
+      background: #FEF3C7;
+      border: 1px solid var(--albero);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 0.75rem;
+      color: #78350F;
+      margin: 12px 0;
+    }
+    .btn-submit {
+      width: 100%;
+      background: var(--carmesi);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ESTILO MODAL MENÚ PRINCIPAL */
+    .menu-options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .menu-item-btn {
+      background: #FAFAF9;
+      border: 2px solid #E2D9C8;
+      border-radius: 14px;
+      padding: 16px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all 0.2s;
+    }
+    .menu-item-btn:hover {
+      background: #FEF3C7;
+      border-color: var(--albero);
+      transform: translateY(-2px);
+    }
+    .menu-item-icon {
+      font-size: 1.8rem;
+      background: #FFFFFF;
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .menu-item-text h4 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      color: var(--carmesi);
+      margin-bottom: 2px;
+    }
+    .menu-item-text p {
+      font-size: 0.75rem;
+      color: #6B7280;
+    }
+
+    /* ESTILO DE HISTORIA (PERGAMINO FERIAL) */
+    .ferial-parchment {
+      background: #FFFDF7;
+      border: 3px double var(--albero);
+      border-radius: 14px;
+      padding: 24px 20px;
+      box-shadow: inset 0 0 15px rgba(229,184,36,0.15);
+      position: relative;
+      min-height: 180px;
+    }
+    .proximamente-badge {
+      text-align: center;
+      font-family: 'Cinzel', serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--carmesi);
+      letter-spacing: 2px;
+      margin: 20px 0 12px;
+    }
+    .history-content-text {
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: #374151;
+      white-space: pre-wrap;
+      text-align: justify;
+    }
+
+    /* TABLÓN DE CORCHO DE LA GALERÍA CON CHINCHETAS */
+    .corkboard {
+      background-color: #C89968;
+      background-image: 
+        radial-gradient(#9B683B 15%, transparent 16%),
+        radial-gradient(#B07D4C 15%, transparent 16%);
+      background-size: 16px 16px;
+      background-position: 0 0, 8px 8px;
+      border: 12px solid #5C381E;
+      border-radius: 16px;
+      padding: 24px 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 10px 25px rgba(0,0,0,0.25);
+      min-height: 280px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+      margin-top: 10px;
+    }
+    @media (max-width: 480px) {
+      .corkboard { grid-template-columns: 1fr; }
+    }
+    .polaroid-card {
+      background: #FFFFFF;
+      padding: 10px 10px 18px;
+      border-radius: 4px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.4);
+      position: relative;
+      transition: transform 0.2s ease;
+      text-align: center;
+    }
+    .polaroid-card:nth-child(odd) { transform: rotate(-2.5deg); }
+    .polaroid-card:nth-child(even) { transform: rotate(2.5deg); }
+    .polaroid-card:hover { transform: scale(1.03) rotate(0deg); z-index: 5; }
+    .thumbtack {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.5rem;
+      filter: drop-shadow(0 3px 3px rgba(0,0,0,0.4));
+      z-index: 10;
+      line-height: 1;
+    }
+    .polaroid-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 2px;
+      display: block;
+      cursor: pointer;
+    }
+    .polaroid-caption {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #374151;
+      margin-top: 10px;
+      word-break: break-word;
+    }
+
+    /* NOTICIAS Y ENLACES SOCIALES */
+    .notices-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .notice-card {
+      background: #FFFFFF;
+      border-left: 5px solid var(--carmesi);
+      border-radius: 10px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .notice-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .notice-title { font-weight: 700; color: var(--carmesi); font-size: 0.95rem; }
+    .notice-date { font-size: 0.72rem; color: #9CA3AF; font-weight: 600; }
+    .notice-body { font-size: 0.82rem; color: #4B5563; line-height: 1.5; white-space: pre-wrap; }
+
+    .social-links-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 480px) {
+      .social-links-grid { grid-template-columns: 1fr; }
+    }
+    .btn-social {
+      padding: 14px;
+      border-radius: 14px;
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    .btn-social:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.25); }
+    .btn-instagram { background: linear-gradient(45deg, #F09433 0%, #E6683C 25%, #DC2743 50%, #CC2366 75%, #BC1888 100%); }
+    .btn-facebook { background: #1877F2; }
+    .btn-tiktok { background: #000000; }
+    .btn-extra-web { background: var(--verde-feria); }
+
+    /* PANEL DIRECTIVA INTERNO */
+    .admin-stats-box { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+    .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; }
+    .stat-row strong { color: var(--carmesi); }
+    .table-responsive { max-height: 260px; overflow-y: auto; border: 1px solid #E5E7EB; border-radius: 8px; margin: 12px 0; }
+    table.admin-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    table.admin-table th, table.admin-table td { padding: 8px 6px; border-bottom: 1px solid #E5E7EB; text-align: left; }
+    table.admin-table th { background: #F3F4F6; font-weight: 700; position: sticky; top: 0; }
+    .btn-pay-status { border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer; }
+    .btn-pay-status.paid { background: #DCFCE7; color: #166534; }
+    .btn-pay-status.unpaid { background: #FEE2E2; color: #991B1B; }
+    .btn-del { background: #EF4444; color: #fff; border: none; padding: 3px 7px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; }
+    .btn-wa-reminder {
+      background: #25D366;
+      color: #FFFFFF;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-wa-reminder:hover { background: #1EBE5D; transform: translateY(-1px); }
+
+
+    footer { text-align: center; margin-top: 30px; font-size: 0.75rem; color: #78716C; }
+  
+    .month-stepper {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #F3F4F6;
+      border: 1px solid #D1D5DB;
+      border-radius: 6px;
+      padding: 2px 4px;
+      margin-top: 3px;
+    }
+    .btn-step-month {
+      background: #FFFFFF;
+      border: 1px solid #9CA3AF;
+      border-radius: 4px;
+      width: 22px;
+      height: 22px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      line-height: 1;
+      cursor: pointer;
+      color: #1F2937;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-step-month:hover { background: var(--albero); border-color: var(--albero-dark); color: #78350F; }
+    .months-covered-badge {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #166534;
+      background: #DCFCE7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-top: 3px;
+      line-height: 1.3;
+    }
+    .months-unpaid-badge {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #991B1B;
+      background: #FEE2E2;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-top: 3px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- BARRA SUPERIOR FIJA: MENÚ Y CONEXIÓN -->
+  <div class="top-nav-bar">
+    <button class="btn-top-menu" onclick="openModal('modalMainMenu')">
+      <span class="menu-bars">☰</span> Menú
+    </button>
+    <div class="sync-status-indicator" id="syncStatus" onclick="showCloudDiagnostics()" title="Toca para ver detalles de conexión">
+      <span class="sync-dot" id="syncDot"></span>
+      <span id="syncText">Conectando a la nube...</span>
+    </div>
+  </div>
+
+  <!-- GUIRNALDA DE FAROLILLOS -->
+  <div class="garland">
+    <span class="lantern">🏮</span><span class="lantern">🏮</span><span class="lantern">🏮</span>
+    <span class="lantern">🏮</span><span class="lantern">🏮</span><span class="lantern">🏮</span>
+    <span class="lantern">🏮</span>
+  </div>
+
+  <div class="container">
+    <header>
+      <div class="badge-top">Campaña 15 Noviembre a 15 Septiembre</div><br>
+      <h1 class="title">Sorteo Albero y Cal</h1>
+      <div class="subtitle-award">
+        <span class="label">Gran Premio de:</span>
+        <span class="amount" id="displayPrize">350€</span>
+      </div>
+      <div class="top-bar-actions">
+        <button class="btn-action btn-whatsapp" onclick="shareOnWhatsApp()"><span>📲</span> Compartir por WhatsApp</button>
+        <button class="btn-action" onclick="copyAppShareLink()"><span>🔗</span> Copiar Enlace</button>
+        <button class="btn-action" id="btnInstallApp" onclick="triggerInstallApp()" style="background:#FFFBEB; border-color:var(--albero); color:#78350F;"><span>📲</span> Instalar App</button>
+        <button class="btn-action" onclick="openAdminAuthModal()"><span>🔐</span> Panel Directiva</button>
+      </div>
+    </header>
+
+    <div class="instructions-card">
+      <h3><span>📋</span> Normas e Instrucciones del Sorteo</h3>
+      <ul>
+        <li class="rule-ok">Pulsa sobre cualquiera de los <strong>números libres (del 00 al 99)</strong>.</li>
+        <li class="rule-ok">Rellena tu nombre completo, teléfono y el <strong>alias público</strong> que desees.</li>
+        <li class="rule-ok"><strong>Privacidad absoluta:</strong> el resto de participantes <strong>únicamente verá tu alias</strong> en la casilla. Tus datos privados solo son visibles para la Directiva (los 3 administradores y el tesorero).</li>
+        <li class="rule-alert"><strong>INSCRIPCIÓN INICIAL EN ROJO:</strong> Al apuntarte, tu casilla aparecerá en <strong>ROJO (Impagado)</strong> hasta que el tesorero o los administradores comprueben el pago de los 5€ y validen tu número.</li>
+        <li class="rule-alert"><strong>OBLIGATORIEDAD DE PAGO:</strong> El pago debe recibirse a más tardar el <strong>día 14 a las 23:59h</strong> (víspera del sorteo). Si no se recibe, <strong>el participante NO entra en el sorteo</strong> y la casilla permanece en <strong>ROJO</strong>.</li>
+        <li class="rule-alert"><strong>NÚMERO IMPAGADO PREMIADO:</strong> Si sale premiado un número no pagado, <strong>la caseta «Albero y Cal» se hace cargo del número abonando los 5€ y se adjudica el premio íntegro</strong> para su fondo acumulado.</li>
+        <li class="rule-ok">Sorteos el <strong>día 15 de cada mes (desde el 15 de Noviembre al 15 de Septiembre)</strong> <span id="infoLotterySource">según el sorteo de la ONCE</span>.</li>
+      </ul>
+    </div>
+
+    <!-- RECUADRO DE DATOS DE PAGO BIZUM Y CUENTA BANCARIA -->
+    <div class="payment-box">
+      <h3><span>💳</span> Medios de Pago Oficiales (5€ por número)</h3>
+      <p class="payment-subtext">Una vez reservado tu número, realiza el pago antes del día 14 indicando en el concepto tu <strong>Número y Alias</strong>:</p>
+      <div class="payment-methods-grid">
+        <div class="payment-method-card">
+          <div class="pay-header">
+            <span class="pay-icon">📱</span>
+            <span class="pay-title">Bizum Oficial</span>
+          </div>
+          <div class="pay-val" id="displayBizum">Consultar Directiva</div>
+          <button class="btn-copy-pay" onclick="copyPaymentData('displayBizum', 'Teléfono de Bizum')">📋 Copiar Bizum</button>
+        </div>
+        <div class="payment-method-card">
+          <div class="pay-header">
+            <span class="pay-icon">🏦</span>
+            <span class="pay-title">Transferencia (IBAN)</span>
+          </div>
+          <div class="pay-val" id="displayIban">Consultar Directiva</div>
+          <button class="btn-copy-pay" onclick="copyPaymentData('displayIban', 'Número de cuenta')">📋 Copiar Cuenta</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="price-tag-banner"><div class="price-text-red">5€ por participación</div></div>
+
+    <div class="legend-bar">
+      <div class="legend-item"><span class="legend-color legend-free"></span> Libre</div>
+      <div class="legend-item"><span class="legend-color legend-paid"></span> Pagado / En regla</div>
+      <div class="legend-item"><span class="legend-color legend-unpaid"></span> ⚠️ No Pagado (Sin derecho a premio)</div>
+    </div>
+
+    <div class="quick-stats">
+      <span>Disponibles: <strong id="statFree">100</strong></span> • 
+      <span>Ocupados: <strong id="statTaken">0</strong> / 100</span> • 
+      <span style="color:#DC2626;">Impagados: <strong id="statUnpaid" style="color:#DC2626;">0</strong></span>
+    </div>
+
+    <div class="grid-wrapper">
+      <div class="numbers-grid" id="numbersGrid"></div>
+    </div>
+
+    <h2 class="section-title"><span>🏛️</span> Directiva del Sorteo</h2>
+    <div class="board-grid">
+      <div class="board-card" id="cardAdmin1" onclick="handleBoardClick('admin1')">
+        <div class="board-role">Administrador 1</div>
+        <div class="board-alias" id="aliasAdmin1">Disponible</div>
+        <div class="board-status status-free" id="statusAdmin1">Pulsar para inscribirse</div>
+      </div>
+      <div class="board-card" id="cardAdmin2" onclick="handleBoardClick('admin2')">
+        <div class="board-role">Administrador 2</div>
+        <div class="board-alias" id="aliasAdmin2">Disponible</div>
+        <div class="board-status status-free" id="statusAdmin2">Pulsar para inscribirse</div>
+      </div>
+      <div class="board-card" id="cardAdmin3" onclick="handleBoardClick('admin3')">
+        <div class="board-role">Administrador 3</div>
+        <div class="board-alias" id="aliasAdmin3">Disponible</div>
+        <div class="board-status status-free" id="statusAdmin3">Pulsar para inscribirse</div>
+      </div>
+      <div class="board-card" id="cardTesorero" onclick="handleBoardClick('tesorero')">
+        <div class="board-role">Tesorero</div>
+        <div class="board-alias" id="aliasTesorero">Disponible</div>
+        <div class="board-status status-free" id="statusTesorero">Pulsar para inscribirse</div>
+      </div>
+    </div>
+
+    <div class="calendar-card">
+      <h2 class="section-title" style="margin-top:0;"><span>📅</span> Calendario de Premiados (15 Noviembre - 15 Septiembre)</h2>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
+    <footer>Caseta «Albero y Cal» • Sistema de Gestión y Sorteo en Tiempo Real</footer>
+  </div>
+
+  <!-- MODAL: MENÚ PRINCIPAL (3 APARTADOS) -->
+  <div class="modal-overlay" id="modalMainMenu">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">🏮 Menú Albero y Cal</h3>
+        <button class="btn-close" onclick="closeModal('modalMainMenu')">&times;</button>
+      </div>
+      <div class="menu-options-list">
+        <button class="menu-item-btn" onclick="openSectionFromMenu('modalHistory')">
+          <div class="menu-item-icon">📜</div>
+          <div class="menu-item-text">
+            <h4>Historia de la Caseta</h4>
+            <p>Conoce los orígenes y trayectoria de nuestra caseta.</p>
+          </div>
+        </button>
+        <button class="menu-item-btn" onclick="openSectionFromMenu('modalGallery')">
+          <div class="menu-item-icon">📸</div>
+          <div class="menu-item-text">
+            <h4>Galería de Recuerdos</h4>
+            <p>Tablón de corcho con los mejores momentos feriales.</p>
+          </div>
+        </button>
+        <button class="menu-item-btn" onclick="openSectionFromMenu('modalNewsLinks')">
+          <div class="menu-item-icon">📢</div>
+          <div class="menu-item-text">
+            <h4>Noticias y Enlaces Oficiales</h4>
+            <p>Tablón de anuncios y redes sociales oficiales.</p>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: HISTORIA (VISTA PÚBLICA) -->
+  <div class="modal-overlay" id="modalHistory">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 class="modal-title">📜 Historia de la Caseta</h3>
+        <button class="btn-close" onclick="closeModal('modalHistory')">&times;</button>
+      </div>
+      <div class="ferial-parchment" id="historyViewContainer">
+        <!-- Renderizado dinámico -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GALERÍA (TABLÓN DE CORCHO CON CHINCHETAS Y FAROLILLOS) -->
+  <div class="modal-overlay" id="modalGallery">
+    <div class="modal-content" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 class="modal-title">📸 Galería Ferial</h3>
+        <button class="btn-close" onclick="closeModal('modalGallery')">&times;</button>
+      </div>
+      <div class="garland" style="margin-bottom: 6px;">
+        <span class="lantern">🏮</span><span class="lantern">🏮</span><span class="lantern">🏮</span><span class="lantern">🏮</span><span class="lantern">🏮</span>
+      </div>
+      <div class="corkboard" id="corkboardGrid">
+        <!-- Renderizado dinámico -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NOTICIAS Y ENLACES (VISTA PÚBLICA) -->
+  <div class="modal-overlay" id="modalNewsLinks">
+    <div class="modal-content" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3 class="modal-title">📢 Noticias y Enlaces</h3>
+        <button class="btn-close" onclick="closeModal('modalNewsLinks')">&times;</button>
+      </div>
+      <h4 style="font-size:0.88rem; color:var(--carmesi); margin-bottom:10px; font-weight:700;">📌 Tablón de Anuncios</h4>
+      <div class="notices-container" id="noticesListContainer">
+        <!-- Renderizado dinámico -->
+      </div>
+      <h4 style="font-size:0.88rem; color:var(--verde-feria); margin:18px 0 10px; font-weight:700;">🌐 Redes Sociales y Enlaces Oficiales</h4>
+      <div class="social-links-grid" id="socialButtonsContainer">
+        <!-- Renderizado dinámico -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRAR NÚMERO -->
+  <div class="modal-overlay" id="modalRegister">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalNumberTitle">Elegir Número</h3>
+        <button class="btn-close" onclick="closeModal('modalRegister')">&times;</button>
+      </div>
+      <form id="formRegisterNumber" onsubmit="saveNumberRegistration(event)">
+        <input type="hidden" id="selectedNumberHidden">
+        <div class="form-group">
+          <label for="regFullName">Nombre completo (Privado)</label>
+          <input type="text" id="regFullName" required placeholder="Ej: Juan Pérez Gómez">
+        </div>
+        <div class="form-group">
+          <label for="regPhone">Teléfono de contacto (Privado)</label>
+          <input type="tel" id="regPhone" required placeholder="Ej: 612 345 678">
+        </div>
+        <div class="form-group">
+          <label for="regAlias">Alias visible (Lo que todos verán en la casilla)</label>
+          <input type="text" id="regAlias" maxlength="14" required placeholder="Ej: Juanito / El Chache">
+        </div>
+        <div class="privacy-notice">
+          🔒 <strong>Nota importante:</strong> Tu número aparecerá inicialmente marcado en <strong>ROJO (Impagado)</strong>. Una vez ingresados los 5€ por Bizum o Transferencia bancaria, la Directiva validará el pago y pondrá tu casilla en regla.
+        </div>
+        <button type="submit" class="btn-submit" id="btnSubmitNumber">Confirmar y Reservar Número (5€)</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DIRECTIVA -->
+  <div class="modal-overlay" id="modalBoard">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalBoardTitle">Inscripción Directiva</h3>
+        <button class="btn-close" onclick="closeModal('modalBoard')">&times;</button>
+      </div>
+      <form id="formBoardRegister" onsubmit="saveBoardRegistration(event)">
+        <input type="hidden" id="selectedBoardRole">
+        <div class="form-group"><label for="boardFullName">Nombre Completo</label><input type="text" id="boardFullName" required></div>
+        <div class="form-group"><label for="boardPhone">Teléfono Móvil</label><input type="tel" id="boardPhone" required></div>
+        <div class="form-group"><label for="boardAlias">Alias público</label><input type="text" id="boardAlias" maxlength="15" required></div>
+        <div class="form-group"><label for="boardPin">PIN de Acceso (4 dígitos)</label><input type="password" id="boardPin" maxlength="4" pattern="[0-9]{4}" required></div>
+        <button type="submit" class="btn-submit" id="btnSubmitBoard">Tomar Posesión del Cargo</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL AUTH -->
+  <div class="modal-overlay" id="modalAuth">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Panel de Directiva</h3>
+        <button class="btn-close" onclick="closeModal('modalAuth')">&times;</button>
+      </div>
+      <form id="formAuth" onsubmit="verifyAdminPin(event)">
+        <div class="form-group">
+          <label for="loginRole">Selecciona tu cargo:</label>
+          <select id="loginRole" required>
+            <option value="admin1">Administrador 1</option>
+            <option value="admin2">Administrador 2</option>
+            <option value="admin3">Administrador 3</option>
+            <option value="tesorero">Tesorero</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="loginPin">PIN de 4 dígitos:</label>
+          <input type="password" id="loginPin" maxlength="4" required placeholder="****">
+        </div>
+        <button type="submit" class="btn-submit">Entrar al Panel de Control</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- PANEL ADMIN COMPLETO -->
+  <div class="modal-overlay" id="modalAdminDashboard">
+    <div class="modal-content" style="max-width: 660px;">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ Tablón de Gestión: Albero y Cal</h3>
+        <button class="btn-close" onclick="closeModal('modalAdminDashboard')">&times;</button>
+      </div>
+
+      <!-- ESTADÍSTICAS -->
+      <div class="admin-stats-box">
+        <h4 style="font-size:0.85rem; color:#1F2937; margin-bottom:8px;">💰 Balance y Finanzas del Mes</h4>
+        <div class="stat-row"><span>Participaciones:</span><strong id="dashSold">0 / 100</strong></div>
+        <div class="stat-row"><span>Pagadas: <span id="dashPaidCount" style="color:var(--verde-feria); font-weight:700;">0</span> | Impagadas: <span id="dashUnpaidCount" style="color:var(--rojo-impago); font-weight:700;">0</span></span></div>
+        <div class="stat-row"><span>Recaudación Pagada:</span><strong id="dashRealMoney" style="color:var(--verde-feria);">0 €</strong></div>
+        <div class="stat-row"><span>Premio Ganador (<span id="dashWinnerPctLabel">70</span>%):</span><strong id="dashWinnerPrize" style="color:var(--carmesi);">0 €</strong></div>
+        <div class="stat-row"><span>Comisión Caseta (<span id="dashHousePctLabel">30</span>%):</span><strong id="dashHouseMoney" style="color:var(--dorado);">0 €</strong></div>
+      </div>
+
+      <!-- 1. MODIFICAR PORCENTAJES DE REPARTO -->
+      <div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:10px; padding:12px; margin-bottom:14px;">
+        <h4 style="font-size:0.82rem; color:#92400E; margin-bottom:8px;">⚙️ Modificar Porcentaje de Reparto</h4>
+        <div style="display:flex; gap:10px; margin-bottom:8px;">
+          <div style="flex:1;">
+            <label style="font-size:0.7rem; font-weight:700;">% Premio Ganador:</label>
+            <input type="number" id="inpWinnerPct" min="0" max="100" value="70" style="width:100%; padding:6px; border-radius:6px; border:1px solid #D1D5DB;" oninput="updatePercentagesFromWinner()">
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:0.7rem; font-weight:700;">% Comisión Caseta:</label>
+            <input type="number" id="inpHousePct" min="0" max="100" value="30" style="width:100%; padding:6px; border-radius:6px; border:1px solid #D1D5DB;" oninput="updatePercentagesFromHouse()">
+          </div>
+        </div>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:0.7rem; font-weight:700;">Dónde seguir el sorteo:</label>
+          <input type="text" id="inpSourceInfo" placeholder="Ej: Sorteo ONCE del día 15 a las 21:15h" style="width:100%; padding:6px; border-radius:6px; border:1px solid #D1D5DB;">
+        </div>
+        <button type="button" class="btn-action" id="btnSavePrize" style="width:100%; justify-content:center; background:#166534; color:#fff; border:none; margin-top:4px; font-weight:700;" onclick="savePrizeSettings()">💾 Guardar Porcentajes</button>
+      </div>
+
+      <!-- 2. MEDIOS DE PAGO BIZUM Y CUENTA -->
+      <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:10px; padding:12px; margin-bottom:14px;">
+        <h4 style="font-size:0.82rem; color:#1E40AF; margin-bottom:8px;">💳 Modificar Datos de Pago (Bizum y Cuenta)</h4>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:0.7rem; font-weight:700;">Teléfono para Bizum:</label>
+          <input type="text" id="inpBizumPhone" placeholder="Ej: 600 123 456 (Nombre tesorero/admin)" style="width:100%; padding:6px; border-radius:6px; border:1px solid #D1D5DB;">
+        </div>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:0.7rem; font-weight:700;">Número de Cuenta / IBAN (Transferencia):</label>
+          <input type="text" id="inpBankAccount" placeholder="Ej: ES12 3456 7890 1234 5678 9012" style="width:100%; padding:6px; border-radius:6px; border:1px solid #D1D5DB;">
+        </div>
+        <button type="button" class="btn-action" id="btnSavePayment" style="width:100%; justify-content:center; background:#2563EB; color:#fff; border:none; margin-top:4px; font-weight:700;" onclick="savePaymentSettings()">💾 Guardar Bizum y Cuenta</button>
+      </div>
+
+      <!-- 3. GESTIÓN DE LA HISTORIA -->
+      <div style="background:#FFFDF7; border:1.5px solid var(--albero); border-radius:10px; padding:12px; margin-bottom:14px;">
+        <h4 style="font-size:0.82rem; color:#92400E; margin-bottom:8px;">📜 Redactar Historia de la Caseta</h4>
+        <p style="font-size:0.72rem; color:#6B7280; margin-bottom:6px;">Si lo dejas en blanco, a los visitantes les aparecerá «Próximamente»:</p>
+        <textarea id="inpHistoryText" rows="5" placeholder="Escribe aquí los orígenes, anécdotas e historia de la Caseta Albero y Cal..." style="width:100%; padding:8px; border-radius:6px; border:1px solid #D1D5DB; font-family:inherit; font-size:0.85rem;"></textarea>
+        <button type="button" class="btn-action" id="btnSaveHistory" style="width:100%; justify-content:center; background:var(--albero-dark); color:#fff; border:none; margin-top:6px; font-weight:700;" onclick="saveHistorySettings()">💾 Guardar Historia</button>
+      </div>
+
+      <!-- 4. GESTIÓN DE FOTOS DE LA GALERÍA -->
+      <div style="background:#FDF4E3; border:1.5px solid #D97706; border-radius:10px; padding:12px; margin-bottom:14px;">
+        <h4 style="font-size:0.82rem; color:#B45309; margin-bottom:8px;">📸 Gestionar Galería (Tablón de Corcho)</h4>
+        <p style="font-size:0.72rem; color:#4B5563; margin-bottom:8px;">Sube una foto desde tu móvil o pega su enlace de internet:</p>
+        <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;">
+          <input type="file" id="inpGalleryFile" accept="image/*" style="font-size:0.75rem;">
+          <input type="text" id="inpGalleryUrl" placeholder="O pega el enlace de la imagen (URL)..." style="width:100%; padding:6px; border-radius:6px; border:1px solid #D1D5DB; font-size:0.8rem;">
+          <input type="text" id="inpGalleryCaption" placeholder="Título o pie de foto (Ej: Feria 2025)..." style="width:100%; padding:6px; border-radius:6px; border:1px solid #D1D5DB; font-size:0.8rem;">
+        </div>
+        <button type="button" class="btn-action" id="btnAddGallery" style="width:100%; justify-content:center; background:#D97706; color:#fff; border:none; font-weight:700;" onclick="addGalleryPhoto()">📌 Pinchar Foto en el Tablón</button>
+        <div id="adminGalleryThumbnails" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+      </div>
+
+      <!-- 5. GESTIÓN DE NOTICIAS Y REDES SOCIALES -->
+      <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:12px; margin-bottom:14px;">
+        <h4 style="font-size:0.82rem; color:#166534; margin-bottom:8px;">📢 Publicar Anuncios y Redes Sociales</h4>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:0.7rem; font-weight:700;">Título del anuncio:</label>
+          <input type="text" id="inpNoticeTitle" placeholder="Ej: Cena de feria de socios" style="width:100%; padding:6px; border-radius:6px; border:1px solid #D1D5DB; font-size:0.8rem;">
+        </div>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:0.7rem; font-weight:700;">Mensaje:</label>
+          <textarea id="inpNoticeText" rows="2" placeholder="Información del aviso..." style="width:100%; padding:6px; border-radius:6px; border:1px solid #D1D5DB; font-family:inherit; font-size:0.8rem;"></textarea>
+        </div>
+        <button type="button" class="btn-action" style="width:100%; justify-content:center; background:#166534; color:#fff; border:none; margin-bottom:10px; font-weight:700;" onclick="addNotice()">📢 Publicar Anuncio</button>
+        <div id="adminNoticesList" style="margin-bottom:12px;"></div>
+
+        <h5 style="font-size:0.75rem; color:#166534; margin-bottom:6px; font-weight:700;">Enlaces Permanentes Oficiales:</h5>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <input type="text" id="inpSocialInstagram" placeholder="Enlace Instagram (https://instagram.com/...)" style="width:100%; padding:5px; border-radius:6px; border:1px solid #D1D5DB; font-size:0.75rem;">
+          <input type="text" id="inpSocialFacebook" placeholder="Enlace Facebook (https://facebook.com/...)" style="width:100%; padding:5px; border-radius:6px; border:1px solid #D1D5DB; font-size:0.75rem;">
+          <input type="text" id="inpSocialTiktok" placeholder="Enlace TikTok (https://tiktok.com/...)" style="width:100%; padding:5px; border-radius:6px; border:1px solid #D1D5DB; font-size:0.75rem;">
+          <input type="text" id="inpSocialExtra" placeholder="Otro enlace web de interés..." style="width:100%; padding:5px; border-radius:6px; border:1px solid #D1D5DB; font-size:0.75rem;">
+        </div>
+        <button type="button" class="btn-action" style="width:100%; justify-content:center; background:#059669; color:#fff; border:none; margin-top:8px; font-weight:700;" onclick="saveSocialLinks()">💾 Guardar Enlaces Redes</button>
+      </div>
+
+      <!-- 6. ASIGNAR GANADOR MENSUAL -->
+      <div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:10px; padding:12px; margin-bottom:14px;">
+        <h4 style="font-size:0.82rem; color:#92400E; margin-bottom:6px;">🏆 Asignar Ganador del Mes</h4>
+        <button type="button" class="btn-action" style="background:#166534; color:#fff; border:none; width:100%; justify-content:center; margin-bottom:8px;" onclick="window.open('https://www.juegosonce.es/resultados-cupon-diario', '_blank')">🌐 Consultar Resultados ONCE Oficial</button>
+        <div style="display:flex; gap:8px;">
+          <select id="selWinnerMonth" style="flex:1.4; padding:6px; border-radius:6px; border:1px solid #D1D5DB;"></select>
+          <input type="text" id="inpWinningNum" maxlength="2" placeholder="00-99" style="width:75px; text-align:center; padding:6px; border-radius:6px; border:1px solid #D1D5DB; font-weight:700;">
+          <button type="button" class="btn-action" onclick="saveMonthlyWinner()">Fijar</button>
+        </div>
+      </div>
+
+      <!-- 6B. PANEL FLASH EMERGENTE CONFIGURABLE -->
+      <div style="background:#FEF2F2; border:2px solid #F87171; border-radius:12px; padding:14px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+          <h4 style="font-size:0.86rem; color:#991B1B; font-weight:800;">⚡ Panel Flash (Aviso Emergente al Abrir la App)</h4>
+          <label style="font-size:0.78rem; font-weight:800; color:#991B1B; background:#FEE2E2; padding:4px 10px; border-radius:20px; border:1px solid #FCA5A5; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="checkbox" id="inpFlashActive" style="width:16px; height:16px;"> Activar Panel Flash
+          </label>
+        </div>
+        <p style="font-size:0.72rem; color:#7F1D1D; margin-bottom:8px;">Cuando está activo, saldrá centrado nada más abrir la app a todas las personas que entren. Toca cualquier emoticono para añadirlo al texto:</p>
+        <div style="margin-bottom:6px;">
+          <input type="text" id="inpFlashTitle" placeholder="Título del aviso (Ej: ⚠️ AVISO IMPORTANTE DE LA DIRECTIVA)" style="width:100%; padding:7px 10px; border-radius:8px; border:1px solid #FCA5A5; font-size:0.82rem; font-weight:700;">
+        </div>
+        <div>
+          <textarea id="inpFlashText" rows="3" placeholder="Escribe aquí el mensaje del Panel Flash con todos los emoticonos que quieras..." style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #FCA5A5; font-family:inherit; font-size:0.85rem;"></textarea>
+        </div>
+        <div class="emoji-bar">
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('⚠️')">⚠️</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('🚨')">🚨</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('❤️')">❤️</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('💖')">💖</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('💰')">💰</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('💶')">💶</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('💩')">💩</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('🏮')">🏮</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('🎉')">🎉</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('🔥')">🔥</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('📢')">📢</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('⏰')">⏰</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('🍻')">🍻</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('💃')">💃</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('🏆')">🏆</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('👍')">👍</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('🙏')">🙏</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('❌')">❌</button>
+          <button type="button" class="btn-emoji" onclick="insertFlashEmoji('✅')">✅</button>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:210px;">
+            <label style="font-size:0.75rem; font-weight:700; color:#7F1D1D; white-space:nowrap;">Tiempo en pantalla:</label>
+            <select id="selFlashDuration" style="flex:1; padding:6px 8px; border-radius:8px; border:1px solid #FCA5A5; font-size:0.78rem; font-weight:600;">
+              <option value="10">10 segundos</option>
+              <option value="15">15 segundos</option>
+              <option value="20">20 segundos</option>
+              <option value="30">30 segundos</option>
+              <option value="0">Sin límite (Solo botón Entendido)</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:6px; width:100%; margin-top:4px;">
+            <button type="button" class="btn-action" style="flex:1; justify-content:center; background:#FFFFFF; color:#991B1B; border:1.5px solid #991B1B; font-weight:700;" onclick="previewFlashPanel()">👁️ Previsualizar</button>
+            <button type="button" class="btn-action" id="btnSaveFlash" style="flex:1.4; justify-content:center; background:#DC2626; color:#FFFFFF; border:none; font-weight:700;" onclick="saveFlashSettings()">💾 Guardar Panel Flash</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. CONTROL DE PAGOS, NÚMEROS Y LISTADO POR PERSONAS -->
+      <h4 style="font-size:0.85rem; color:#1F2937; margin-bottom:8px;">📋 Gestión de Participantes, Pagos y Números</h4>
+
+      <!-- BANNER AVISOS DÍA 10 (5 DÍAS ANTES) -->
+      <div style="background:#F0FDF4; border:1.5px solid #86EFAC; border-radius:10px; padding:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div>
+          <div style="font-size:0.85rem; font-weight:800; color:#166534;">📲 Recordatorios de Pago (Avisos del día 10)</div>
+          <div style="font-size:0.75rem; color:#4B5563;">Pulsa «📲» en cualquier socio impagado para abrir su WhatsApp con el mensaje ya redactado.</div>
+        </div>
+        <div style="font-size:0.78rem; font-weight:700; background:#DCFCE7; color:#166534; padding:4px 10px; border-radius:20px;">
+          Impagados pendientes: <span id="dashReminderCount">0</span>
+        </div>
+      </div>
+
+      <!-- SELECTOR DE MES ACTIVO DE LA CAMPAÑA -->
+      <div style="background:#FFFBEB; border:1.5px solid var(--albero); border-radius:10px; padding:10px 12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div>
+          <span style="font-size:0.78rem; font-weight:800; color:#78350F;">📅 Mes del sorteo en curso:</span>
+          <span style="font-size:0.72rem; color:#92400E; display:block;">Los meses pagados se calculan automáticamente a partir de este mes.</span>
+        </div>
+        <select id="selCurrentCampaignMonth" onchange="changeCurrentCampaignMonth(this.value)" style="padding:6px 10px; border-radius:8px; border:1.5px solid var(--albero-dark); font-weight:800; font-size:0.82rem; color:var(--carmesi); background:#FFFFFF;"></select>
+      </div>
+
+      <!-- PESTAÑAS PARA ALTERNAR ENTRE VISTA POR NÚMEROS Y VISTA POR PERSONAS -->
+      <div class="admin-tabs-bar">
+        <button type="button" class="admin-tab-btn active" id="tabBtnNumbersView" onclick="switchAdminParticipantsView('numbers')">
+          <span>🔢</span> Por Números (00-99)
+        </button>
+        <button type="button" class="admin-tab-btn" id="tabBtnPersonsView" onclick="switchAdminParticipantsView('persons')">
+          <span>👥</span> Listado por Personas (<span id="countUniquePersonsBadge">0</span>)
+        </button>
+      </div>
+
+      <!-- VISTA A: TABLA POR NÚMEROS -->
+      <div id="adminNumbersViewWrap">
+        <div class="table-responsive" style="max-height:300px;">
+          <table class="admin-table">
+            <thead><tr><th>Nº</th><th>Alias</th><th>Nombre</th><th>Teléfono</th><th>Pago</th><th>Aviso</th><th>Acciones</th></tr></thead>
+            <tbody id="adminTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VISTA B: LISTADO AGRUPADO POR PERSONAS (CON TODOS SUS NÚMEROS) -->
+      <div id="adminPersonsViewWrap" style="display:none; max-height:360px; overflow-y:auto; padding:4px 2px;">
+        <div id="adminPersonsListContainer"></div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <button class="btn-action" style="flex:1; justify-content:center;" onclick="exportToCSV()">📊 Descargar Excel</button>
+        <button class="btn-action" style="flex:1.4; justify-content:center; background:#DC2626; color:#fff; border:none; font-weight:700;" onclick="resetAllMonth()">🔄 Cerrar Mes y Pasar al Siguiente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EMERGENTE: PANEL FLASH AL ABRIR LA APP -->
+  <div class="modal-overlay" id="modalFlashNotice" style="z-index: 2500;">
+    <div class="flash-modal-box">
+      <div class="flash-icon-top">⚡</div>
+      <div class="flash-title-text" id="flashModalTitle">⚠️ AVISO IMPORTANTE</div>
+      <div class="flash-body-text" id="flashModalBody"></div>
+      <div id="flashModalTimerWrap" style="display:none;">
+        <span class="flash-timer-badge" id="flashModalTimerText">⏳ Se quitará en 15 s</span>
+      </div>
+      <button type="button" class="btn-flash-understood" onclick="dismissFlashModal()">Entendido</button>
+    </div>
+  </div>
+
+  <!-- MODAL: MODIFICAR DATOS O CAMBIAR NÚMERO DE PARTICIPANTE -->
+  <div class="modal-overlay" id="modalEditParticipant" style="z-index: 2100;">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="editModalTitle">✏️ Modificar Participante</h3>
+        <button class="btn-close" onclick="closeModal('modalEditParticipant')">&times;</button>
+      </div>
+      <form id="formEditParticipant" onsubmit="saveEditedParticipant(event)">
+        <input type="hidden" id="editOrigNum">
+        <div class="form-group">
+          <label for="editFullName">Nombre completo (Privado):</label>
+          <input type="text" id="editFullName" required>
+        </div>
+        <div class="form-group">
+          <label for="editPhone">Teléfono de contacto (Privado):</label>
+          <input type="tel" id="editPhone" required>
+        </div>
+        <div class="form-group">
+          <label for="editAlias">Alias público en la casilla:</label>
+          <input type="text" id="editAlias" maxlength="14" required>
+        </div>
+        <div class="form-group">
+          <label for="editTargetNum">Número asignado (Puedes cambiarlo a otro libre):</label>
+          <select id="editTargetNum" style="font-weight:700; color:var(--carmesi);"></select>
+        </div>
+        <div class="form-group">
+          <label for="editMonthsPaid">Meses pagados por adelantado (Ej: 1, 6, 10...):</label>
+          <input type="number" id="editMonthsPaid" min="1" max="12" value="1" required style="font-weight:700; color:var(--verde-feria);">
+        </div>
+        <div class="form-group">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.84rem; margin-top:6px;">
+            <input type="checkbox" id="editAllSamePerson" checked style="width:16px; height:16px;">
+            Actualizar nombre, teléfono y alias en todos los números que tenga esta misma persona
+          </label>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:14px;">
+          <button type="button" class="btn-action" style="flex:1; justify-content:center;" onclick="closeModal('modalEditParticipant')">Cancelar</button>
+          <button type="submit" class="btn-submit" style="flex:1.5;">💾 Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // FUNCIONES GLOBALES DE APERTURA DE VENTANAS
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('active');
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    }
+
+    // CANDIDATOS DE BASE DE DATOS FIREBASE (SOPORTE MULTIRREGIÓN EUROPA / GLOBAL)
+    const CANDIDATE_FIREBASE_URLS = [
+      "https://sorteo-albero-y-cal-default-rtdb.europe-west1.firebasedatabase.app",
+      "https://sorteo-albero-y-cal-default-rtdb.firebaseio.com",
+      "https://sorteo-albero-y-cal.europe-west1.firebasedatabase.app",
+      "https://sorteo-albero-y-cal.firebaseio.com"
+    ];
+
+    let currentDbUrl = localStorage.getItem('sorteo_active_db_url') || CANDIDATE_FIREBASE_URLS[0];
+    let lastCloudError = "Iniciando conexión...";
+
+    const MONTHS = ['Noviembre', 'Diciembre', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre'];
+    const DEFAULT_DATA = {
+      pricePerNum: 5,
+      winnerPct: 70,
+      housePct: 30,
+      bizumPhone: "Consultar Directiva",
+      bankAccount: "Consultar Directiva",
+      lotterySource: "Sorteo de la ONCE del día 15",
+      history: "",
+      gallery: {},
+      notices: {},
+      socialLinks: { instagram: "", facebook: "", tiktok: "", extraWeb: "" },
+      participants: {},
+      board: { admin1: null, admin2: null, admin3: null, tesorero: null },
+      winners: {},
+      currentMonthIdx: 0,
+      flashPanel: { active: false, title: "⚠️ AVISO IMPORTANTE", text: "", duration: 15, updatedAt: 0 }
+    };
+    let flashIntervalTimer = null;
+    let flashRemainingSeconds = 0;
+
+    // Cargar datos locales iniciales para que la web NUNCA esté vacía
+    let state = loadLocalData();
+
+    function loadLocalData() {
+      try {
+        const stored = localStorage.getItem('sorteo_albero_cal_data');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          return { ...DEFAULT_DATA, ...parsed };
+        }
+      } catch (e) {}
+      return DEFAULT_DATA;
+    }
+
+    function saveLocalData(data) {
+      try {
+        localStorage.setItem('sorteo_albero_cal_data', JSON.stringify(data));
+      } catch (e) {}
+    }
+
+    // Inicializar cuadrícula 00-99
+    const gridEl = document.getElementById('numbersGrid');
+    for (let i = 0; i < 100; i++) {
+      const numStr = i.toString().padStart(2, '0');
+      const d = document.createElement('div');
+      d.id = 'cell-' + numStr;
+      d.className = 'num-cell free';
+      d.innerHTML = '<div class="number-val">' + numStr + '</div><div class="alias-val">Libre</div>';
+      d.onclick = () => openNumberModal(numStr);
+      gridEl.appendChild(d);
+    }
+
+    // Inicializar calendario de meses
+    const calEl = document.getElementById('calendarGrid');
+    const selM = document.getElementById('selWinnerMonth');
+    MONTHS.forEach((m, idx) => {
+      const b = document.createElement('div');
+      b.className = 'month-box';
+      b.id = 'month-' + idx;
+      b.innerHTML = '<div class="month-name">' + m + '</div><div class="month-day">Día 15</div><div class="month-number empty" id="month-num-' + idx + '">—</div>';
+      calEl.appendChild(b);
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.innerText = m + ' (15 ' + m.slice(0,3) + ')';
+      selM.appendChild(opt);
+
+      const selCurr = document.getElementById('selCurrentCampaignMonth');
+      if (selCurr) {
+        const opt2 = document.createElement('option');
+        opt2.value = idx;
+        opt2.innerText = 'Sorteo 15 de ' + m;
+        selCurr.appendChild(opt2);
+      }
+    });
+
+    // Diagnósticos al tocar el indicador
+    function showCloudDiagnostics() {
+      alert("📡 Estado de Conexión:\n\n• Servidor activo: " + currentDbUrl + "\n• Diagnóstico: " + lastCloudError + "\n\nSi necesitas revisar las reglas de Firebase, asegúrate de que en la consola pongan .read: true y .write: true.");
+    }
+
+    // SINCRONIZACIÓN CON DETECCIÓN AUTOMÁTICA DE REGIÓN
+    async function syncWithCloud() {
+      const urlsToTry = [currentDbUrl, ...CANDIDATE_FIREBASE_URLS.filter(u => u !== currentDbUrl)];
+      let success = false;
+
+      for (const baseUrl of urlsToTry) {
+        try {
+          const res = await fetch(baseUrl + '/.json');
+          if (res.ok) {
+            currentDbUrl = baseUrl;
+            localStorage.setItem('sorteo_active_db_url', baseUrl);
+            const cloudData = await res.json();
+            
+            if (cloudData && typeof cloudData === 'object') {
+              state = {
+                ...DEFAULT_DATA,
+                ...cloudData,
+                gallery: cloudData.gallery || {},
+                notices: cloudData.notices || {},
+                socialLinks: cloudData.socialLinks || {},
+                participants: cloudData.participants || {},
+                board: cloudData.board || {},
+                winners: cloudData.winners || {},
+                currentMonthIdx: (cloudData.currentMonthIdx !== undefined) ? parseInt(cloudData.currentMonthIdx) : 0,
+                flashPanel: cloudData.flashPanel || DEFAULT_DATA.flashPanel
+              };
+              saveLocalData(state);
+            } else {
+              // Si la nube está vacía por primera vez, guardar datos iniciales
+              await pushToActiveCloud(state);
+            }
+
+            render();
+            checkAndShowFlashModal();
+            document.getElementById('syncDot').className = 'sync-dot online';
+            document.getElementById('syncText').innerText = '🟢 Conectado en directo (Sincronizado)';
+            lastCloudError = "Conexión en tiempo real activa y sincronizada.";
+            success = true;
+            break;
+          } else if (res.status === 401 || res.status === 403) {
+            lastCloudError = "Error 401 (Permiso denegado): Las Reglas de Firebase deben cambiarse a .read: true y .write: true.";
+            document.getElementById('syncDot').className = 'sync-dot offline';
+            document.getElementById('syncText').innerText = '🔴 Permiso denegado (Revisar Reglas)';
+            return;
+          }
+        } catch (e) {
+          lastCloudError = "Error de red: " + (e.message || "Fallo de conexión");
+        }
+      }
+
+      if (!success) {
+        document.getElementById('syncDot').className = 'sync-dot offline';
+        document.getElementById('syncText').innerText = '🔴 Sin conexión con la nube';
+      }
+    }
+
+    async function pushToActiveCloud(data) {
+      try {
+        await fetch(currentDbUrl + '/.json', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      } catch (e) {}
+    }
+
+    function render() {
+      const p = state.participants || {};
+      let taken = 0, unpaid = 0;
+      for (let i = 0; i < 100; i++) {
+        const numStr = i.toString().padStart(2, '0');
+        const item = p[numStr];
+        const cell = document.getElementById('cell-' + numStr);
+        if (item) {
+          taken++;
+          const paid = (item.paid === true);
+          if (!paid) {
+            unpaid++;
+            cell.className = 'num-cell unpaid';
+            cell.innerHTML = '<div class="number-val">' + numStr + '</div><div class="alias-val">⚠️ ' + item.alias + '</div>';
+            cell.onclick = () => alert('Número ' + numStr + ' (' + item.alias + ')\n\n⚠️ ESTADO: PAGO PENDIENTE DE VALIDACIÓN.\nEl participante debe abonar los 5€ antes del día 14 para que la Directiva valide su casilla.');
+          } else {
+            cell.className = 'num-cell taken';
+            cell.innerHTML = '<div class="number-val">' + numStr + '</div><div class="alias-val">' + item.alias + '</div>';
+            cell.onclick = () => alert('El número ' + numStr + ' ya está cogido y confirmado por: ' + item.alias);
+          }
+        } else {
+          cell.className = 'num-cell free';
+          cell.innerHTML = '<div class="number-val">' + numStr + '</div><div class="alias-val">Libre</div>';
+          cell.onclick = () => openNumberModal(numStr);
+        }
+      }
+      document.getElementById('statFree').innerText = 100 - taken;
+      document.getElementById('statTaken').innerText = taken;
+      document.getElementById('statUnpaid').innerText = unpaid;
+
+      // Directiva
+      ['admin1', 'admin2', 'admin3', 'tesorero'].forEach(r => {
+        const mb = state.board ? state.board[r] : null;
+        const c = document.getElementById('card' + r.charAt(0).toUpperCase() + r.slice(1));
+        const a = document.getElementById('alias' + r.charAt(0).toUpperCase() + r.slice(1));
+        const s = document.getElementById('status' + r.charAt(0).toUpperCase() + r.slice(1));
+        if (mb) {
+          c.classList.add('registered');
+          a.innerText = mb.alias;
+          s.className = 'board-status status-locked';
+          s.innerText = '🔒 Asignado';
+        } else {
+          c.classList.remove('registered');
+          a.innerText = 'Disponible';
+          s.className = 'board-status status-free';
+          s.innerText = 'Pulsar para inscribirse';
+        }
+      });
+
+      // Calendario
+      MONTHS.forEach((m, idx) => {
+        const w = state.winners ? state.winners[idx] : '';
+        const b = document.getElementById('month-' + idx);
+        const n = document.getElementById('month-num-' + idx);
+        if (w) { b.classList.add('has-winner'); n.className = 'month-number'; n.innerText = w; }
+        else { b.classList.remove('has-winner'); n.className = 'month-number empty'; n.innerText = '—'; }
+      });
+
+      // Porcentajes
+      const totalRecaudado = taken * 5;
+      const winPct = (state.winnerPct !== undefined) ? parseInt(state.winnerPct) : 70;
+      const housePct = (state.housePct !== undefined) ? parseInt(state.housePct) : (100 - winPct);
+      const prize = Math.round(totalRecaudado * (winPct / 100));
+      const house = totalRecaudado - prize;
+
+      document.getElementById('displayPrize').innerText = prize + '€';
+      document.getElementById('infoLotterySource').innerText = state.lotterySource || 'Sorteo de la ONCE del día 15';
+
+      document.getElementById('displayBizum').innerText = state.bizumPhone || 'Consultar Directiva';
+      document.getElementById('displayIban').innerText = state.bankAccount || 'Consultar Directiva';
+
+      // Dashboard
+      document.getElementById('dashSold').innerText = taken + ' / 100';
+      document.getElementById('dashPaidCount').innerText = (taken - unpaid);
+      document.getElementById('dashUnpaidCount').innerText = unpaid;
+      const remEl = document.getElementById('dashReminderCount');
+      if (remEl) remEl.innerText = unpaid;
+      document.getElementById('dashRealMoney').innerText = ((taken - unpaid) * 5) + ' €';
+      document.getElementById('dashWinnerPrize').innerText = prize + ' €';
+      document.getElementById('dashHouseMoney').innerText = house + ' €';
+      document.getElementById('dashWinnerPctLabel').innerText = winPct;
+      document.getElementById('dashHousePctLabel').innerText = housePct;
+
+      const modalAdmin = document.getElementById('modalAdminDashboard');
+      if (!modalAdmin.classList.contains('active')) {
+        document.getElementById('inpWinnerPct').value = winPct;
+        document.getElementById('inpHousePct').value = housePct;
+        document.getElementById('inpSourceInfo').value = state.lotterySource || '';
+        document.getElementById('inpBizumPhone').value = (state.bizumPhone && !state.bizumPhone.includes('Consultar')) ? state.bizumPhone : '';
+        document.getElementById('inpBankAccount').value = (state.bankAccount && !state.bankAccount.includes('Consultar')) ? state.bankAccount : '';
+      }
+
+      // Renderizar vistas públicas de Historia, Galería y Noticias
+      renderPublicHistory();
+      renderPublicGallery();
+      renderPublicNewsLinks();
+    }
+
+    function openSectionFromMenu(modalId) {
+      closeModal('modalMainMenu');
+      openModal(modalId);
+    }
+
+    // 1. RENDERIZADO DE HISTORIA
+    function renderPublicHistory() {
+      const container = document.getElementById('historyViewContainer');
+      const text = (state.history || '').trim();
+      if (!text) {
+        container.innerHTML = '<div class="proximamente-badge">🏮 Próximamente 🏮</div>' +
+          '<p style="font-size:0.95rem; color:#57534E; text-align:center; line-height:1.7;">' +
+          'Nuestra historia se está redactando con todo el cariño y esencia ferial.<br>' +
+          'Muy pronto la Directiva publicará aquí los orígenes, momentos dorados y anécdotas de la Caseta «Albero y Cal».' +
+          '</p>';
+      } else {
+        container.innerHTML = '<div class="history-content-text">' + escapeHTML(text) + '</div>';
+      }
+    }
+
+    async function saveHistorySettings() {
+      const btn = document.getElementById('btnSaveHistory');
+      btn.disabled = true;
+      btn.innerText = 'Guardando...';
+      const text = document.getElementById('inpHistoryText').value.trim();
+      state.history = text;
+      saveLocalData(state);
+      renderPublicHistory();
+      try {
+        await fetch(currentDbUrl + '/history.json', { method: 'PUT', body: JSON.stringify(text) });
+        btn.innerText = '✅ ¡Historia Guardada!';
+        setTimeout(() => { btn.innerText = '💾 Guardar Historia'; btn.disabled = false; }, 2000);
+        alert('✅ ¡Historia de la caseta guardada y actualizada para todos los socios!');
+      } catch (err) {
+        btn.innerText = '💾 Guardar Historia';
+        btn.disabled = false;
+        alert('Guardado en memoria local. Se sincronizará en cuanto haya conexión a la nube.');
+      }
+    }
+
+    // 2. RENDERIZADO DE GALERÍA (TABLÓN DE CORCHO CON CHINCHETAS)
+    function renderPublicGallery() {
+      const cork = document.getElementById('corkboardGrid');
+      const gal = state.gallery || {};
+      const keys = Object.keys(gal);
+      if (keys.length === 0) {
+        cork.innerHTML = '<div class="polaroid-card" style="grid-column: 1 / -1; max-width: 320px; margin: 20px auto;">' +
+          '<div class="thumbtack">📍</div>' +
+          '<div style="background:#FEF3C7; padding:25px 14px; border-radius:4px; border:1px dashed #D97706; text-align:center;">' +
+          '<span style="font-size:2rem;">📷</span>' +
+          '<h4 style="font-family:\'Cinzel\',serif; color:#78350F; margin:8px 0 4px; font-size:1.1rem;">Rincón de Recuerdos</h4>' +
+          '<p style="font-size:0.8rem; color:#4B5563; line-height:1.5;">El tablón está listo para recibir las mejores fotografías de nuestra caseta. La Directiva irá colgando aquí los recuerdos más inolvidables.</p>' +
+          '</div>' +
+          '<div class="polaroid-caption">Caseta Albero y Cal</div>' +
+          '</div>';
+        return;
+      }
+      cork.innerHTML = '';
+      keys.forEach(k => {
+        const item = gal[k];
+        const card = document.createElement('div');
+        card.className = 'polaroid-card';
+        card.innerHTML = '<div class="thumbtack">📍</div>';
+        
+        const img = document.createElement('img');
+        img.src = item.url;
+        img.className = 'polaroid-img';
+        img.alt = item.caption || 'Foto ferial';
+        img.onclick = () => window.open(item.url, '_blank');
+        card.appendChild(img);
+
+        if (item.caption) {
+          const cap = document.createElement('div');
+          cap.className = 'polaroid-caption';
+          cap.innerText = item.caption;
+          card.appendChild(cap);
+        }
+        cork.appendChild(card);
+      });
+    }
+
+    function renderAdminGalleryThumbnails() {
+      const box = document.getElementById('adminGalleryThumbnails');
+      const gal = state.gallery || {};
+      const keys = Object.keys(gal);
+      if (keys.length === 0) {
+        box.innerHTML = '<span style="font-size:0.75rem; color:#9CA3AF;">No hay fotos para gestionar.</span>';
+        return;
+      }
+      box.innerHTML = '';
+      keys.forEach(k => {
+        const item = gal[k];
+        const d = document.createElement('div');
+        d.style.cssText = 'position:relative; width:70px; height:70px; border-radius:6px; overflow:hidden; border:1px solid #D1D5DB;';
+        
+        const img = document.createElement('img');
+        img.src = item.url;
+        img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+        d.appendChild(img);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.innerText = '✕';
+        btn.style.cssText = 'position:absolute; top:2px; right:2px; background:#EF4444; color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:10px; cursor:pointer; line-height:1;';
+        btn.onclick = () => deleteGalleryPhoto(k);
+        d.appendChild(btn);
+
+        box.appendChild(d);
+      });
+    }
+
+    async function addGalleryPhoto() {
+      const fileInp = document.getElementById('inpGalleryFile');
+      const urlInp = document.getElementById('inpGalleryUrl');
+      const captionInp = document.getElementById('inpGalleryCaption');
+      const btn = document.getElementById('btnAddGallery');
+
+      let photoUrl = urlInp.value.trim();
+      const caption = captionInp.value.trim();
+
+      if (fileInp.files && fileInp.files[0]) {
+        btn.disabled = true;
+        btn.innerText = 'Procesando foto...';
+        const file = fileInp.files[0];
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+          const img = new Image();
+          img.onload = async function() {
+            const maxDim = 800;
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+              else { w = Math.round((w * maxDim) / h); h = maxDim; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            photoUrl = canvas.toDataURL('image/jpeg', 0.75);
+            await pushPhotoToDatabase(photoUrl, caption);
+            fileInp.value = '';
+            btn.disabled = false;
+            btn.innerText = '📌 Pinchar Foto en el Tablón';
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else if (photoUrl) {
+        btn.disabled = true;
+        await pushPhotoToDatabase(photoUrl, caption);
+        urlInp.value = '';
+        btn.disabled = false;
+      } else {
+        alert('Por favor, selecciona una foto de tu móvil o introduce un enlace de imagen.');
+      }
+    }
+
+    async function pushPhotoToDatabase(url, caption) {
+      const photoId = 'photo_' + Date.now();
+      const photoData = { url, caption, date: new Date().toLocaleDateString() };
+      if (!state.gallery) state.gallery = {};
+      state.gallery[photoId] = photoData;
+      saveLocalData(state);
+      renderPublicGallery();
+      renderAdminGalleryThumbnails();
+      document.getElementById('inpGalleryCaption').value = '';
+      try {
+        await fetch(currentDbUrl + '/gallery/' + photoId + '.json', {
+          method: 'PUT',
+          body: JSON.stringify(photoData)
+        });
+        alert('✅ ¡Foto pinchada con chincheta en el tablón ferial!');
+      } catch (err) {
+        alert('Guardada localmente.');
+      }
+    }
+
+    async function deleteGalleryPhoto(photoId) {
+      if (confirm('¿Deseas quitar esta foto del tablón de corcho?')) {
+        delete state.gallery[photoId];
+        saveLocalData(state);
+        renderPublicGallery();
+        renderAdminGalleryThumbnails();
+        try {
+          await fetch(currentDbUrl + '/gallery/' + photoId + '.json', { method: 'DELETE' });
+        } catch (e) {}
+      }
+    }
+
+    // 3. RENDERIZADO DE NOTICIAS Y REDES
+    function handleSocialClick(network) {
+      const links = state.socialLinks || {};
+      const url = links[network];
+      if (url && url.trim().length > 0) {
+        window.open(url, '_blank');
+      } else {
+        const names = { instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', extraWeb: 'la Web Oficial' };
+        alert('El enlace de ' + (names[network] || 'la red social') + ' se publicará próximamente.');
+      }
+    }
+
+    function renderPublicNewsLinks() {
+      const notContainer = document.getElementById('noticesListContainer');
+      const notices = state.notices || {};
+      const nKeys = Object.keys(notices).reverse();
+      if (nKeys.length === 0) {
+        notContainer.innerHTML = '<div style="background:#F8FAFC; border:1px dashed #CBD5E1; border-radius:10px; padding:20px; text-align:center;">' +
+          '<span style="font-size:1.8rem;">📣</span>' +
+          '<p style="font-size:0.85rem; color:#64748B; margin-top:6px; font-weight:600;">No hay avisos pendientes en el tablón.<br><span style="font-size:0.75rem; font-weight:400;">La Directiva notificará aquí las fechas de reuniones, montajes y eventos.</span></p>' +
+          '</div>';
+      } else {
+        notContainer.innerHTML = '';
+        nKeys.forEach(k => {
+          const item = notices[k];
+          const div = document.createElement('div');
+          div.className = 'notice-card';
+          div.innerHTML = '<div class="notice-header-row"><span class="notice-title">' + escapeHTML(item.title) + '</span><span class="notice-date">' + (item.date || '') + '</span></div>' +
+            '<div class="notice-body">' + escapeHTML(item.text) + '</div>';
+          notContainer.appendChild(div);
+        });
+      }
+
+      const sContainer = document.getElementById('socialButtonsContainer');
+      sContainer.innerHTML = `
+        <a href="javascript:void(0)" class="btn-social btn-instagram" onclick="handleSocialClick('instagram')">
+          <span>📸</span> Instagram
+        </a>
+        <a href="javascript:void(0)" class="btn-social btn-facebook" onclick="handleSocialClick('facebook')">
+          <span>📘</span> Facebook
+        </a>
+        <a href="javascript:void(0)" class="btn-social btn-tiktok" onclick="handleSocialClick('tiktok')">
+          <span>🎵</span> TikTok
+        </a>
+        <a href="javascript:void(0)" class="btn-social btn-extra-web" onclick="handleSocialClick('extraWeb')">
+          <span>🌐</span> Web Oficial
+        </a>
+      `;
+    }
+
+    function renderAdminNoticesList() {
+      const box = document.getElementById('adminNoticesList');
+      const notices = state.notices || {};
+      const keys = Object.keys(notices).reverse();
+      if (keys.length === 0) {
+        box.innerHTML = '<span style="font-size:0.75rem; color:#9CA3AF;">Sin anuncios activos.</span>';
+        return;
+      }
+      box.innerHTML = '';
+      keys.forEach(k => {
+        const item = notices[k];
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#fff; padding:6px 8px; border-radius:6px; border:1px solid #E5E7EB; margin-bottom:4px; font-size:0.75rem;';
+        row.innerHTML = '<span><strong>' + escapeHTML(item.title) + '</strong> (' + (item.date || '') + ')</span>';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.innerText = 'Borrar';
+        btn.style.cssText = 'background:#EF4444; color:#fff; border:none; padding:2px 6px; border-radius:4px; font-size:0.7rem; cursor:pointer;';
+        btn.onclick = () => deleteNotice(k);
+        row.appendChild(btn);
+
+        box.appendChild(row);
+      });
+    }
+
+    async function addNotice() {
+      const tInp = document.getElementById('inpNoticeTitle');
+      const bInp = document.getElementById('inpNoticeText');
+      const title = tInp.value.trim();
+      const text = bInp.value.trim();
+      if (!title || !text) { alert('Rellena el título y el mensaje del anuncio.'); return; }
+      const noticeId = 'notice_' + Date.now();
+      const noticeData = { title, text, date: new Date().toLocaleDateString() };
+      if (!state.notices) state.notices = {};
+      state.notices[noticeId] = noticeData;
+      saveLocalData(state);
+      tInp.value = ''; bInp.value = '';
+      renderPublicNewsLinks();
+      renderAdminNoticesList();
+      try {
+        await fetch(currentDbUrl + '/notices/' + noticeId + '.json', { method: 'PUT', body: JSON.stringify(noticeData) });
+        alert('✅ ¡Anuncio publicado en el tablón!');
+      } catch (e) {}
+    }
+
+    async function deleteNotice(noticeId) {
+      if (confirm('¿Eliminar este anuncio del tablón?')) {
+        delete state.notices[noticeId];
+        saveLocalData(state);
+        renderPublicNewsLinks();
+        renderAdminNoticesList();
+        try {
+          await fetch(currentDbUrl + '/notices/' + noticeId + '.json', { method: 'DELETE' });
+        } catch (e) {}
+      }
+    }
+
+    async function saveSocialLinks() {
+      const ig = document.getElementById('inpSocialInstagram').value.trim();
+      const fb = document.getElementById('inpSocialFacebook').value.trim();
+      const tt = document.getElementById('inpSocialTiktok').value.trim();
+      const web = document.getElementById('inpSocialExtra').value.trim();
+      state.socialLinks = { instagram: ig, facebook: fb, tiktok: tt, extraWeb: web };
+      saveLocalData(state);
+      renderPublicNewsLinks();
+      try {
+        await fetch(currentDbUrl + '/socialLinks.json', { method: 'PUT', body: JSON.stringify(state.socialLinks) });
+        alert('✅ ¡Enlaces a redes sociales actualizados!');
+      } catch (e) {}
+    }
+
+    // REGISTRO DE NÚMERO (SALE INICIALMENTE COMO NO PAGADO)
+    async function openNumberModal(numStr) {
+      await syncWithCloud();
+      if (state.participants && state.participants[numStr]) {
+        alert('Este número ya ha sido reservado.');
+        return;
+      }
+      document.getElementById('selectedNumberHidden').value = numStr;
+      document.getElementById('modalNumberTitle').innerText = 'Elegir Número ' + numStr;
+      document.getElementById('regFullName').value = '';
+      document.getElementById('regPhone').value = '';
+      document.getElementById('regAlias').value = '';
+      openModal('modalRegister');
+    }
+
+    async function saveNumberRegistration(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitNumber');
+      btn.disabled = true;
+      btn.innerText = 'Guardando...';
+      const num = document.getElementById('selectedNumberHidden').value;
+      const fullName = document.getElementById('regFullName').value.trim();
+      const phone = document.getElementById('regPhone').value.trim();
+      const alias = document.getElementById('regAlias').value.trim();
+      try {
+        const check = await (await fetch(currentDbUrl + '/participants/' + num + '.json')).json();
+        if (check) { alert('¡Número recién ocupado por otro participante!'); closeModal('modalRegister'); return; }
+        
+        const data = {
+          fullName,
+          phone,
+          alias,
+          paid: false,
+          date: new Date().toLocaleDateString()
+        };
+        await fetch(currentDbUrl + '/participants/' + num + '.json', { method: 'PUT', body: JSON.stringify(data) });
+        if (!state.participants) state.participants = {};
+        state.participants[num] = data;
+        saveLocalData(state);
+        closeModal('modalRegister');
+        alert('¡Número ' + num + ' reservado para \"' + alias + '\"!\n\n⚠️ ESTADO: NO PAGADO (Casilla en rojo).\nPara validar tu participación, abona los 5€ por Bizum o Transferencia antes del día 14.\nLa Directiva comprobará el abono y activará tu casilla.');
+      } catch (err) { alert('Error de conexión.'); }
+      finally { btn.disabled = false; btn.innerText = 'Confirmar y Reservar Número (5€)'; syncWithCloud(); }
+    }
+
+    // DIRECTIVA
+    async function handleBoardClick(role) {
+      await syncWithCloud();
+      if (state.board && state.board[role]) {
+        document.getElementById('loginRole').value = role;
+        openModal('modalAuth');
+      } else {
+        document.getElementById('selectedBoardRole').value = role;
+        document.getElementById('modalBoardTitle').innerText = 'Inscripción: ' + role.toUpperCase();
+        document.getElementById('boardFullName').value = '';
+        document.getElementById('boardPhone').value = '';
+        document.getElementById('boardAlias').value = '';
+        document.getElementById('boardPin').value = '';
+        openModal('modalBoard');
+      }
+    }
+
+    async function saveBoardRegistration(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitBoard');
+      btn.disabled = true;
+      const role = document.getElementById('selectedBoardRole').value;
+      const fullName = document.getElementById('boardFullName').value.trim();
+      const phone = document.getElementById('boardPhone').value.trim();
+      const alias = document.getElementById('boardAlias').value.trim();
+      const pin = document.getElementById('boardPin').value.trim();
+      try {
+        await fetch(currentDbUrl + '/board/' + role + '.json', { method: 'PUT', body: JSON.stringify({ fullName, phone, alias, pin }) });
+        if (!state.board) state.board = {};
+        state.board[role] = { fullName, phone, alias, pin };
+        saveLocalData(state);
+        closeModal('modalBoard');
+        alert('¡Cargo registrado! PIN: ' + pin);
+      } catch (err) { alert('Error al registrar.'); }
+      finally { btn.disabled = false; syncWithCloud(); }
+    }
+
+    function openAdminAuthModal() {
+      const b = state.board || {};
+      if (!b.admin1 && !b.admin2 && !b.admin3 && !b.tesorero) { alert('Aún no hay ningún directivo inscrito.'); return; }
+      openModal('modalAuth');
+    }
+
+    function verifyAdminPin(e) {
+      e.preventDefault();
+      const role = document.getElementById('loginRole').value;
+      const pin = document.getElementById('loginPin').value.trim();
+      const mb = state.board ? state.board[role] : null;
+      if (mb && mb.pin === pin) {
+        closeModal('modalAuth');
+        document.getElementById('loginPin').value = '';
+        populateAdminDashboardFields();
+        renderAdminTable();
+        openModal('modalAdminDashboard');
+      } else { alert('PIN incorrecto.'); }
+    }
+
+    function populateAdminDashboardFields() {
+      document.getElementById('inpWinnerPct').value = (state.winnerPct !== undefined) ? state.winnerPct : 70;
+      document.getElementById('inpHousePct').value = (state.housePct !== undefined) ? state.housePct : 30;
+      document.getElementById('inpSourceInfo').value = state.lotterySource || 'Sorteo de la ONCE del día 15';
+      document.getElementById('inpBizumPhone').value = (state.bizumPhone && !state.bizumPhone.includes('Consultar')) ? state.bizumPhone : '';
+      document.getElementById('inpBankAccount').value = (state.bankAccount && !state.bankAccount.includes('Consultar')) ? state.bankAccount : '';
+      document.getElementById('inpHistoryText').value = state.history || '';
+      
+      const s = state.socialLinks || {};
+      document.getElementById('inpSocialInstagram').value = s.instagram || '';
+      document.getElementById('inpSocialFacebook').value = s.facebook || '';
+      document.getElementById('inpSocialTiktok').value = s.tiktok || '';
+      document.getElementById('inpSocialExtra').value = s.extraWeb || '';
+
+      const selCurr = document.getElementById('selCurrentCampaignMonth');
+      if (selCurr) selCurr.value = String(state.currentMonthIdx || 0);
+      const fp = state.flashPanel || DEFAULT_DATA.flashPanel;
+      document.getElementById('inpFlashActive').checked = (fp.active === true);
+      document.getElementById('inpFlashTitle').value = fp.title || '⚠️ AVISO IMPORTANTE';
+      document.getElementById('inpFlashText').value = fp.text || '';
+      document.getElementById('selFlashDuration').value = (fp.duration !== undefined) ? String(fp.duration) : '15';
+
+      renderAdminGalleryThumbnails();
+      renderAdminNoticesList();
+      renderAdminPersonsList();
+    }
+
+    function switchAdminParticipantsView(mode) {
+      const btnNum = document.getElementById('tabBtnNumbersView');
+      const btnPer = document.getElementById('tabBtnPersonsView');
+      const wrapNum = document.getElementById('adminNumbersViewWrap');
+      const wrapPer = document.getElementById('adminPersonsViewWrap');
+      if (mode === 'persons') {
+        btnNum.classList.remove('active');
+        btnPer.classList.add('active');
+        wrapNum.style.display = 'none';
+        wrapPer.style.display = 'block';
+        renderAdminPersonsList();
+      } else {
+        btnPer.classList.remove('active');
+        btnNum.classList.add('active');
+        wrapPer.style.display = 'none';
+        wrapNum.style.display = 'block';
+        renderAdminTable();
+      }
+    }
+
+    function getEffectiveMonthsPaid(item) {
+      if (!item) return 0;
+      if (item.monthsPaid !== undefined && item.monthsPaid !== null) {
+        return Math.max(0, parseInt(item.monthsPaid) || 0);
+      }
+      return item.paid === true ? 1 : 0;
+    }
+
+    function getCoveredMonthsText(monthsCount) {
+      const count = parseInt(monthsCount) || 0;
+      if (count <= 0) return 'Ningún mes pagado';
+      const startIdx = parseInt(state.currentMonthIdx) || 0;
+      const names = [];
+      for (let i = 0; i < count; i++) {
+        const idx = (startIdx + i) % MONTHS.length;
+        names.push(MONTHS[idx]);
+      }
+      return names.join(', ');
+    }
+
+    async function changeCurrentCampaignMonth(val) {
+      const idx = parseInt(val) || 0;
+      state.currentMonthIdx = idx;
+      saveLocalData(state);
+      renderAdminTable();
+      renderAdminPersonsList();
+      try {
+        await fetch(currentDbUrl + '/currentMonthIdx.json', {
+          method: 'PUT',
+          body: JSON.stringify(idx)
+        });
+      } catch (e) {}
+    }
+
+    async function adjustNumberMonths(numStr, delta) {
+      const p = state.participants || {};
+      const item = p[numStr];
+      if (!item) return;
+      let cur = getEffectiveMonthsPaid(item);
+      let next = Math.max(0, Math.min(24, cur + delta));
+      item.monthsPaid = next;
+      item.paid = (next > 0);
+      p[numStr] = item;
+      state.participants = p;
+      saveLocalData(state);
+      render();
+      renderAdminTable();
+      renderAdminPersonsList();
+      try {
+        await fetch(currentDbUrl + '/participants/' + numStr + '.json', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item)
+        });
+      } catch (e) {}
+    }
+
+    async function adjustPersonAllNumbersMonths(person, delta) {
+      const p = state.participants || {};
+      person.numbers.forEach(nObj => {
+        const item = p[nObj.num];
+        if (!item) return;
+        let cur = getEffectiveMonthsPaid(item);
+        let next = Math.max(0, Math.min(24, cur + delta));
+        item.monthsPaid = next;
+        item.paid = (next > 0);
+        p[nObj.num] = item;
+      });
+      state.participants = p;
+      saveLocalData(state);
+      render();
+      renderAdminTable();
+      renderAdminPersonsList();
+      try {
+        await fetch(currentDbUrl + '/participants.json', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(p)
+        });
+      } catch (e) {}
+    }
+
+    function getGroupedPersons() {
+      const p = state.participants || {};
+      const groups = {};
+      Object.keys(p).sort((a,b) => parseInt(a) - parseInt(b)).forEach(num => {
+        const item = p[num];
+        if (!item) return;
+        const cleanPhone = (item.phone || '').replace(/\D/g, '');
+        const cleanName = (item.fullName || item.alias || '').trim().toLowerCase();
+        const key = cleanPhone ? ('tel_' + cleanPhone) : ('nom_' + cleanName);
+        if (!groups[key]) {
+          groups[key] = {
+            key: key,
+            fullName: item.fullName || '',
+            phone: item.phone || '',
+            alias: item.alias || '',
+            numbers: []
+          };
+        }
+        const effM = getEffectiveMonthsPaid(item);
+        groups[key].numbers.push({ num: num, paid: effM > 0, alias: item.alias, monthsPaid: effM });
+      });
+      return Object.values(groups);
+    }
+
+    function renderAdminTable() {
+      const tb = document.getElementById('adminTableBody');
+      tb.innerHTML = '';
+      const p = state.participants || {};
+      const keys = Object.keys(p).sort((a,b) => parseInt(a) - parseInt(b));
+      const grouped = getGroupedPersons();
+      const badgeEl = document.getElementById('countUniquePersonsBadge');
+      if (badgeEl) badgeEl.innerText = grouped.length;
+
+      if (keys.length === 0) {
+        tb.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:14px;">Sin inscripciones todavía</td></tr>';
+        return;
+      }
+      keys.forEach(k => {
+        const item = p[k];
+        const mp = getEffectiveMonthsPaid(item);
+        const isP = mp > 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td><strong>' + k + '</strong></td><td>' + escapeHTML(item.alias) + '</td><td>' + escapeHTML(item.fullName) + '</td><td>' + escapeHTML(item.phone) + '</td>';
+
+        const tdPay = document.createElement('td');
+        const btnPay = document.createElement('button');
+        btnPay.className = 'btn-pay-status ' + (isP ? 'paid' : 'unpaid');
+        btnPay.innerText = isP ? ('✅ ' + mp + (mp === 1 ? ' mes' : ' meses')) : '❌ Impagado';
+        btnPay.onclick = () => togglePay(k);
+        tdPay.appendChild(btnPay);
+
+        const stepper = document.createElement('div');
+        stepper.className = 'month-stepper';
+        stepper.style.marginLeft = '4px';
+        const btnMinus = document.createElement('button');
+        btnMinus.type = 'button';
+        btnMinus.className = 'btn-step-month';
+        btnMinus.innerText = '-';
+        btnMinus.title = 'Quitar 1 mes';
+        btnMinus.onclick = () => adjustNumberMonths(k, -1);
+
+        const btnPlus = document.createElement('button');
+        btnPlus.type = 'button';
+        btnPlus.className = 'btn-step-month';
+        btnPlus.innerText = '+';
+        btnPlus.title = 'Sumar 1 mes';
+        btnPlus.onclick = () => adjustNumberMonths(k, 1);
+
+        stepper.appendChild(btnMinus);
+        stepper.appendChild(btnPlus);
+        tdPay.appendChild(stepper);
+
+        if (isP) {
+          const mInfo = document.createElement('span');
+          mInfo.className = 'months-covered-badge';
+          mInfo.innerText = 'Pagado: ' + getCoveredMonthsText(mp);
+          tdPay.appendChild(mInfo);
+        } else {
+          const mInfo = document.createElement('span');
+          mInfo.className = 'months-unpaid-badge';
+          mInfo.innerText = 'Pendiente ' + MONTHS[state.currentMonthIdx || 0];
+          tdPay.appendChild(mInfo);
+        }
+        tr.appendChild(tdPay);
+
+        const tdRemind = document.createElement('td');
+        if (!isP) {
+          const btnRemind = document.createElement('button');
+          btnRemind.className = 'btn-wa-reminder';
+          btnRemind.innerHTML = '<span>📲</span> Avisar';
+          btnRemind.onclick = () => sendWhatsAppReminder(k);
+          tdRemind.appendChild(btnRemind);
+        } else {
+          tdRemind.innerHTML = '<span style="color:#166534; font-size:0.72rem; font-weight:700;">✔️ Al día</span>';
+        }
+        tr.appendChild(tdRemind);
+
+        const tdAct = document.createElement('td');
+        tdAct.style.whiteSpace = 'nowrap';
+
+        const btnEdit = document.createElement('button');
+        btnEdit.className = 'btn-del';
+        btnEdit.style.background = '#2563EB';
+        btnEdit.style.marginRight = '4px';
+        btnEdit.innerText = '✏️ Editar';
+        btnEdit.onclick = () => openEditParticipantModal(k);
+        tdAct.appendChild(btnEdit);
+
+        const btnDel = document.createElement('button');
+        btnDel.className = 'btn-del';
+        btnDel.innerText = '🗑️ Eliminar';
+        btnDel.onclick = () => delNum(k);
+        tdAct.appendChild(btnDel);
+
+        tr.appendChild(tdAct);
+        tb.appendChild(tr);
+      });
+    }
+
+    function renderAdminPersonsList() {
+      const container = document.getElementById('adminPersonsListContainer');
+      if (!container) return;
+      container.innerHTML = '';
+      const grouped = getGroupedPersons();
+      const badgeEl = document.getElementById('countUniquePersonsBadge');
+      if (badgeEl) badgeEl.innerText = grouped.length;
+
+      if (grouped.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:22px; color:#6B7280; font-size:0.85rem;">Todavía no hay ninguna persona con números cogidos.</div>';
+        return;
+      }
+
+      grouped.forEach(person => {
+        const card = document.createElement('div');
+        card.className = 'person-card';
+
+        const header = document.createElement('div');
+        header.className = 'person-card-header';
+
+        const infoDiv = document.createElement('div');
+        infoDiv.innerHTML = '<div style="font-size:0.92rem; font-weight:800; color:#1F2937;">👤 ' + escapeHTML(person.fullName) + ' <span style="color:var(--carmesi); font-size:0.82rem;">(' + escapeHTML(person.alias) + ')</span></div>' +
+          '<div style="font-size:0.75rem; color:#4B5563; margin-top:2px;">📱 ' + escapeHTML(person.phone) + ' • <strong>' + person.numbers.length + (person.numbers.length === 1 ? ' número cogido' : ' números cogidos') + '</strong></div>';
+        header.appendChild(infoDiv);
+
+        const headerBtns = document.createElement('div');
+        headerBtns.style.display = 'flex';
+        headerBtns.style.gap = '6px';
+        headerBtns.style.flexWrap = 'wrap';
+        headerBtns.style.alignItems = 'center';
+
+        // Controles globales de meses para TODOS los números de esta persona
+        const bulkStepper = document.createElement('div');
+        bulkStepper.className = 'month-stepper';
+        bulkStepper.style.background = '#FEF3C7';
+        bulkStepper.style.borderColor = '#F59E0B';
+        bulkStepper.innerHTML = '<span style="font-size:0.68rem; font-weight:800; color:#92400E; padding:0 4px;">Meses todos Nº:</span>';
+        const btnBulkMinus = document.createElement('button');
+        btnBulkMinus.type = 'button';
+        btnBulkMinus.className = 'btn-step-month';
+        btnBulkMinus.innerText = '-';
+        btnBulkMinus.onclick = () => adjustPersonAllNumbersMonths(person, -1);
+        const btnBulkPlus = document.createElement('button');
+        btnBulkPlus.type = 'button';
+        btnBulkPlus.className = 'btn-step-month';
+        btnBulkPlus.innerText = '+';
+        btnBulkPlus.onclick = () => adjustPersonAllNumbersMonths(person, 1);
+        bulkStepper.appendChild(btnBulkMinus);
+        bulkStepper.appendChild(btnBulkPlus);
+        headerBtns.appendChild(bulkStepper);
+
+        const firstNum = person.numbers[0].num;
+        const btnEditPerson = document.createElement('button');
+        btnEditPerson.type = 'button';
+        btnEditPerson.style.cssText = 'background:#EFF6FF; color:#1D4ED8; border:1px solid #93C5FD; padding:4px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;';
+        btnEditPerson.innerText = '✏️ Editar';
+        btnEditPerson.onclick = () => openEditParticipantModal(firstNum);
+        headerBtns.appendChild(btnEditPerson);
+
+        const btnDelAll = document.createElement('button');
+        btnDelAll.type = 'button';
+        btnDelAll.style.cssText = 'background:#FEE2E2; color:#DC2626; border:1px solid #FCA5A5; padding:4px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;';
+        btnDelAll.innerText = '🗑️ Borrar todo';
+        btnDelAll.onclick = () => deletePersonAllNumbers(person);
+        headerBtns.appendChild(btnDelAll);
+
+        header.appendChild(headerBtns);
+        card.appendChild(header);
+
+        const chipsWrap = document.createElement('div');
+        chipsWrap.style.display = 'flex';
+        chipsWrap.style.flexDirection = 'column';
+        chipsWrap.style.gap = '6px';
+
+        person.numbers.forEach(nObj => {
+          const mp = nObj.monthsPaid || 0;
+          const isP = mp > 0;
+          const chip = document.createElement('div');
+          chip.className = 'person-num-chip ' + (isP ? 'paid' : 'unpaid');
+          chip.style.display = 'flex';
+          chip.style.justifyContent = 'space-between';
+          chip.style.flexWrap = 'wrap';
+
+          const leftSide = document.createElement('div');
+          leftSide.style.display = 'flex';
+          leftSide.style.alignItems = 'center';
+          leftSide.style.gap = '6px';
+          leftSide.style.flexWrap = 'wrap';
+
+          const numLabel = document.createElement('span');
+          numLabel.style.cssText = 'font-family:"Cinzel",serif; font-weight:800; font-size:0.98rem; color:#1F2937;';
+          numLabel.innerText = 'Nº ' + nObj.num;
+          leftSide.appendChild(numLabel);
+
+          const btnToggle = document.createElement('button');
+          btnToggle.type = 'button';
+          btnToggle.className = 'btn-pay-status ' + (isP ? 'paid' : 'unpaid');
+          btnToggle.innerText = isP ? ('✅ ' + mp + (mp === 1 ? ' mes' : ' meses')) : '❌ Impagado';
+          btnToggle.onclick = () => togglePay(nObj.num);
+          leftSide.appendChild(btnToggle);
+
+          // Stepper - / + individual del número
+          const numStepper = document.createElement('div');
+          numStepper.className = 'month-stepper';
+          const bMinus = document.createElement('button');
+          bMinus.type = 'button';
+          bMinus.className = 'btn-step-month';
+          bMinus.innerText = '-';
+          bMinus.onclick = () => adjustNumberMonths(nObj.num, -1);
+          const bPlus = document.createElement('button');
+          bPlus.type = 'button';
+          bPlus.className = 'btn-step-month';
+          bPlus.innerText = '+';
+          bPlus.onclick = () => adjustNumberMonths(nObj.num, 1);
+          numStepper.appendChild(bMinus);
+          numStepper.appendChild(bPlus);
+          leftSide.appendChild(numStepper);
+
+          // Recuento textual de meses cubiertos (Ej: Pagado: Diciembre, Enero, Febrero)
+          const badgeTxt = document.createElement('span');
+          if (isP) {
+            badgeTxt.className = 'months-covered-badge';
+            badgeTxt.innerText = 'Pagado: ' + getCoveredMonthsText(mp);
+          } else {
+            badgeTxt.className = 'months-unpaid-badge';
+            badgeTxt.innerText = 'Sin pagar (' + MONTHS[state.currentMonthIdx || 0] + ')';
+          }
+          leftSide.appendChild(badgeTxt);
+          chip.appendChild(leftSide);
+
+          const rightSide = document.createElement('div');
+          rightSide.style.display = 'flex';
+          rightSide.style.alignItems = 'center';
+          rightSide.style.gap = '4px';
+
+          if (!isP) {
+            const btnWa = document.createElement('button');
+            btnWa.type = 'button';
+            btnWa.className = 'btn-wa-reminder';
+            btnWa.innerText = '📲';
+            btnWa.title = 'Avisar por WhatsApp';
+            btnWa.onclick = () => sendWhatsAppReminder(nObj.num);
+            rightSide.appendChild(btnWa);
+          }
+
+          const btnEditSingle = document.createElement('button');
+          btnEditSingle.type = 'button';
+          btnEditSingle.style.cssText = 'background:#2563EB; color:#fff; border:none; border-radius:4px; padding:4px 7px; font-size:0.7rem; cursor:pointer; font-weight:700;';
+          btnEditSingle.innerText = '✏️';
+          btnEditSingle.title = 'Cambiar número o editar';
+          btnEditSingle.onclick = () => openEditParticipantModal(nObj.num);
+          rightSide.appendChild(btnEditSingle);
+
+          const btnRemoveSingle = document.createElement('button');
+          btnRemoveSingle.type = 'button';
+          btnRemoveSingle.style.cssText = 'background:#EF4444; color:#fff; border:none; border-radius:4px; padding:4px 7px; font-size:0.7rem; cursor:pointer; font-weight:700;';
+          btnRemoveSingle.innerText = '🗑️';
+          btnRemoveSingle.title = 'Eliminar persona del número';
+          btnRemoveSingle.onclick = () => delNum(nObj.num);
+          rightSide.appendChild(btnRemoveSingle);
+
+          chip.appendChild(rightSide);
+          chipsWrap.appendChild(chip);
+        });
+
+        card.appendChild(chipsWrap);
+        container.appendChild(card);
+      });
+    }
+
+    function openEditParticipantModal(numStr) {
+      const p = state.participants || {};
+      const item = p[numStr];
+      if (!item) return;
+
+      document.getElementById('editOrigNum').value = numStr;
+      document.getElementById('editModalTitle').innerText = '✏️ Modificar Participante (Nº ' + numStr + ')';
+      document.getElementById('editFullName').value = item.fullName || '';
+      document.getElementById('editPhone').value = item.phone || '';
+      document.getElementById('editAlias').value = item.alias || '';
+      document.getElementById('editMonthsPaid').value = item.monthsPaid || 1;
+      document.getElementById('editAllSamePerson').checked = true;
+
+      const sel = document.getElementById('editTargetNum');
+      sel.innerHTML = '';
+      const optKeep = document.createElement('option');
+      optKeep.value = numStr;
+      optKeep.innerText = 'Mantener Nº actual (' + numStr + ')';
+      sel.appendChild(optKeep);
+
+      for (let i = 0; i < 100; i++) {
+        const candidate = i.toString().padStart(2, '0');
+        if (!p[candidate]) {
+          const opt = document.createElement('option');
+          opt.value = candidate;
+          opt.innerText = 'Cambiar al Nº ' + candidate + ' (Libre)';
+          sel.appendChild(opt);
+        }
+      }
+
+      openModal('modalEditParticipant');
+    }
+
+    async function saveEditedParticipant(e) {
+      e.preventDefault();
+      const origNum = document.getElementById('editOrigNum').value;
+      const targetNum = document.getElementById('editTargetNum').value;
+      const newFullName = document.getElementById('editFullName').value.trim();
+      const newPhone = document.getElementById('editPhone').value.trim();
+      const newAlias = document.getElementById('editAlias').value.trim();
+      const newMonthsPaid = parseInt(document.getElementById('editMonthsPaid').value) || 1;
+      const updateAll = document.getElementById('editAllSamePerson').checked;
+
+      const p = state.participants || {};
+      const origItem = p[origNum];
+      if (!origItem) {
+        closeModal('modalEditParticipant');
+        return;
+      }
+
+      const oldCleanPhone = (origItem.phone || '').replace(/\\D/g, '');
+      const oldCleanName = (origItem.fullName || origItem.alias || '').trim().toLowerCase();
+
+      if (updateAll) {
+        Object.keys(p).forEach(k => {
+          const it = p[k];
+          if (!it) return;
+          const cp = (it.phone || '').replace(/\\D/g, '');
+          const cn = (it.fullName || it.alias || '').trim().toLowerCase();
+          if ((oldCleanPhone && cp === oldCleanPhone) || (!oldCleanPhone && cn === oldCleanName)) {
+            p[k] = { ...it, fullName: newFullName, phone: newPhone, alias: newAlias, monthsPaid: newMonthsPaid };
+          }
+        });
+      }
+
+      const updatedEntry = {
+        ...origItem,
+        fullName: newFullName,
+        phone: newPhone,
+        alias: newAlias,
+        monthsPaid: newMonthsPaid
+      };
+
+      if (targetNum !== origNum) {
+        if (p[targetNum]) {
+          alert('El número ' + targetNum + ' ya está ocupado.');
+          return;
+        }
+        delete p[origNum];
+        p[targetNum] = updatedEntry;
+      } else {
+        p[origNum] = updatedEntry;
+      }
+
+      state.participants = p;
+      saveLocalData(state);
+      closeModal('modalEditParticipant');
+      render();
+      renderAdminTable();
+      renderAdminPersonsList();
+
+      try {
+        await fetch(currentDbUrl + '/participants.json', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(p)
+        });
+        alert('✅ Datos actualizados correctamente en todos los dispositivos.');
+      } catch (err) {
+        alert('Guardado localmente.');
+      }
+    }
+
+    async function deletePersonAllNumbers(person) {
+      const numsList = person.numbers.map(n => n.num).join(', ');
+      if (confirm('¿Seguro que quieres eliminar por completo a ' + person.fullName + ' y dejar libres todos sus números (' + numsList + ')?')) {
+        const p = state.participants || {};
+        person.numbers.forEach(nObj => {
+          delete p[nObj.num];
+        });
+        state.participants = p;
+        saveLocalData(state);
+        render();
+        renderAdminTable();
+        renderAdminPersonsList();
+        try {
+          await fetch(currentDbUrl + '/participants.json', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(p)
+          });
+        } catch (e) {}
+      }
+    }
+
+    // FUNCIONES DEL PANEL FLASH EMERGENTE
+    function insertFlashEmoji(emoji) {
+      const area = document.getElementById('inpFlashText');
+      if (!area) return;
+      const start = area.selectionStart || area.value.length;
+      const end = area.selectionEnd || area.value.length;
+      const text = area.value;
+      area.value = text.substring(0, start) + emoji + text.substring(end);
+      area.focus();
+      area.selectionStart = area.selectionEnd = start + emoji.length;
+    }
+
+    function openFlashModalWithData(title, text, durationSec) {
+      document.getElementById('flashModalTitle').innerText = title || '⚠️ AVISO IMPORTANTE';
+      document.getElementById('flashModalBody').innerText = text || '';
+      const timerWrap = document.getElementById('flashModalTimerWrap');
+      const timerText = document.getElementById('flashModalTimerText');
+
+      if (flashIntervalTimer) {
+        clearInterval(flashIntervalTimer);
+        flashIntervalTimer = null;
+      }
+
+      const dur = parseInt(durationSec) || 0;
+      if (dur > 0) {
+        flashRemainingSeconds = dur;
+        timerWrap.style.display = 'block';
+        timerText.innerText = '⏳ Este aviso se cerrará automáticamente en ' + flashRemainingSeconds + ' segundos';
+        flashIntervalTimer = setInterval(() => {
+          flashRemainingSeconds--;
+          if (flashRemainingSeconds <= 0) {
+            dismissFlashModal();
+          } else {
+            timerText.innerText = '⏳ Este aviso se cerrará automáticamente en ' + flashRemainingSeconds + ' segundos';
+          }
+        }, 1000);
+      } else {
+        timerWrap.style.display = 'none';
+      }
+
+      openModal('modalFlashNotice');
+    }
+
+    function dismissFlashModal() {
+      if (flashIntervalTimer) {
+        clearInterval(flashIntervalTimer);
+        flashIntervalTimer = null;
+      }
+      closeModal('modalFlashNotice');
+      if (state.flashPanel && state.flashPanel.updatedAt) {
+        sessionStorage.setItem('albero_flash_dismissed', String(state.flashPanel.updatedAt));
+      }
+    }
+
+    function checkAndShowFlashModal() {
+      const fp = state.flashPanel;
+      if (!fp || fp.active !== true || !fp.text || !fp.text.trim()) return;
+      const dismissedStamp = sessionStorage.getItem('albero_flash_dismissed');
+      if (dismissedStamp && String(fp.updatedAt) === dismissedStamp) return;
+      if (document.getElementById('modalFlashNotice').classList.contains('active')) return;
+      openFlashModalWithData(fp.title, fp.text, fp.duration);
+    }
+
+    function previewFlashPanel() {
+      const title = document.getElementById('inpFlashTitle').value.trim() || '⚠️ AVISO IMPORTANTE';
+      const text = document.getElementById('inpFlashText').value.trim() || 'Escribe aquí el texto de tu aviso flash con emoticonos ⚠️ ❤️ 💰 💩 🏮';
+      const duration = parseInt(document.getElementById('selFlashDuration').value) || 0;
+      openFlashModalWithData(title, text, duration);
+    }
+
+    async function saveFlashSettings() {
+      const btn = document.getElementById('btnSaveFlash');
+      const active = document.getElementById('inpFlashActive').checked;
+      const title = document.getElementById('inpFlashTitle').value.trim() || '⚠️ AVISO IMPORTANTE';
+      const text = document.getElementById('inpFlashText').value.trim();
+      const duration = parseInt(document.getElementById('selFlashDuration').value) || 0;
+
+      if (active && !text) {
+        alert('Escribe un mensaje para el Panel Flash antes de activarlo.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = 'Guardando...';
+
+      const flashObj = {
+        active: active,
+        title: title,
+        text: text,
+        duration: duration,
+        updatedAt: Date.now()
+      };
+
+      state.flashPanel = flashObj;
+      saveLocalData(state);
+      sessionStorage.removeItem('albero_flash_dismissed');
+
+      try {
+        await fetch(currentDbUrl + '/flashPanel.json', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(flashObj)
+        });
+        btn.innerText = '✅ ¡Panel Flash Guardado!';
+        setTimeout(() => { btn.innerText = '💾 Guardar Panel Flash'; btn.disabled = false; }, 2000);
+        alert(active ? '⚡ ¡Panel Flash ACTIVADO! Les saldrá en el centro de la pantalla a todas las personas nada más abrir la app.' : 'Panel Flash desactivado y guardado.');
+      } catch (e) {
+        btn.innerText = '💾 Guardar Panel Flash';
+        btn.disabled = false;
+        alert('Guardado en memoria local.');
+      }
+    }
+
+    function sendWhatsAppReminder(num) {
+      const p = state.participants || {};
+      const item = p[num];
+      if (!item) return;
+
+      let rawPhone = (item.phone || '').replace(/\D/g, '');
+      if (!rawPhone) {
+        alert('El participante del número ' + num + ' no tiene teléfono registrado.');
+        return;
+      }
+      if (rawPhone.length === 9 && (rawPhone.startsWith('6') || rawPhone.startsWith('7'))) {
+        rawPhone = '34' + rawPhone;
+      }
+
+      const bizum = (state.bizumPhone && !state.bizumPhone.includes('Consultar')) ? state.bizumPhone : 'la Directiva';
+      const name = item.fullName ? item.fullName.trim() : item.alias;
+
+      const msg = 'Hola ' + name + ', te recordamos desde la Caseta «Albero y Cal» que quedan 5 días para el sorteo del día 15. Tu número reservado es el ' + num + ' (' + item.alias + '). Recuerda abonar la cuota de 5€ por Bizum al ' + bizum + ' antes del día 14 a las 23:59h para entrar en el sorteo. ¡Muchas gracias!';
+
+      const url = 'https://api.whatsapp.com/send?phone=' + rawPhone + '&text=' + encodeURIComponent(msg);
+      window.open(url, '_blank');
+    }
+
+    async function togglePay(k) {
+      const item = state.participants[k];
+      if (!item) return;
+      const curMonths = getEffectiveMonthsPaid(item);
+      const nextMonths = curMonths > 0 ? 0 : 1;
+      item.monthsPaid = nextMonths;
+      item.paid = (nextMonths > 0);
+      try {
+        await fetch(currentDbUrl + '/participants/' + k + '.json', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item)
+        });
+      } catch (e) {}
+      saveLocalData(state);
+      render();
+      renderAdminTable();
+      renderAdminPersonsList();
+    }
+
+    async function delNum(k) {
+      const pItem = state.participants ? state.participants[k] : null;
+      const pName = pItem ? (pItem.fullName + ' (' + pItem.alias + ')') : '';
+      if (confirm('¿Eliminar por completo a ' + pName + ' del número ' + k + ' y dejar el número libre?')) {
+        try {
+          await fetch(currentDbUrl + '/participants/' + k + '.json', { method: 'DELETE' });
+        } catch (e) {}
+        delete state.participants[k];
+        saveLocalData(state);
+        render();
+        renderAdminTable();
+        renderAdminPersonsList();
+      }
+    }
+
+    async function resetAllMonth() {
+      const p = state.participants || {};
+      const keys = Object.keys(p);
+      const curIdx = parseInt(state.currentMonthIdx) || 0;
+      const nextIdx = (curIdx + 1) % MONTHS.length;
+      const curMonthName = MONTHS[curIdx];
+      const nextMonthName = MONTHS[nextIdx];
+
+      if (!confirm('¿Cerrar el sorteo de ' + curMonthName + ' y pasar a ' + nextMonthName + '?\n\n• Se descontará 1 mes a todos los participantes.\n• Quienes tuvieran meses adelantados (Ej: Diciembre, Enero y Febrero) seguirán PAGADOS para ' + nextMonthName + '.\n• Quienes no tengan ' + nextMonthName + ' pagado pasarán a NO PAGADO (rojo).')) {
+        return;
+      }
+
+      const updated = {};
+      let siguenPagados = 0;
+      let pasanAImpagados = 0;
+
+      keys.forEach(k => {
+        const item = p[k];
+        const curMonths = getEffectiveMonthsPaid(item);
+        const nextMonths = Math.max(0, curMonths - 1);
+        const stillPaid = nextMonths > 0;
+        if (stillPaid) siguenPagados++;
+        else pasanAImpagados++;
+
+        updated[k] = {
+          ...item,
+          monthsPaid: nextMonths,
+          paid: stillPaid
+        };
+      });
+
+      state.participants = updated;
+      state.currentMonthIdx = nextIdx;
+      saveLocalData(state);
+
+      const selCurr = document.getElementById('selCurrentCampaignMonth');
+      if (selCurr) selCurr.value = String(nextIdx);
+
+      try {
+        await Promise.all([
+          fetch(currentDbUrl + '/participants.json', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updated)
+          }),
+          fetch(currentDbUrl + '/currentMonthIdx.json', {
+            method: 'PUT',
+            body: JSON.stringify(nextIdx)
+          })
+        ]);
+      } catch (e) {}
+
+      render();
+      renderAdminTable();
+      renderAdminPersonsList();
+      alert('✅ ¡Mes cerrado! Ahora estamos en el sorteo de ' + nextMonthName + '.\n\n• Siguen pagados por adelantado: ' + siguenPagados + '\n• Pendientes de pago en ' + nextMonthName + ': ' + pasanAImpagados);
+    }
+
+    function updatePercentagesFromWinner() {
+      let win = parseInt(document.getElementById('inpWinnerPct').value);
+      if (isNaN(win)) win = 0;
+      if (win > 100) win = 100;
+      if (win < 0) win = 0;
+      document.getElementById('inpWinnerPct').value = win;
+      document.getElementById('inpHousePct').value = 100 - win;
+    }
+
+    function updatePercentagesFromHouse() {
+      let house = parseInt(document.getElementById('inpHousePct').value);
+      if (isNaN(house)) house = 0;
+      if (house > 100) house = 100;
+      if (house < 0) house = 0;
+      document.getElementById('inpHousePct').value = house;
+      document.getElementById('inpWinnerPct').value = 100 - house;
+    }
+
+    async function savePrizeSettings() {
+      const btn = document.getElementById('btnSavePrize');
+      btn.disabled = true;
+      btn.innerText = 'Guardando...';
+      let winPct = parseInt(document.getElementById('inpWinnerPct').value);
+      if (isNaN(winPct) || winPct < 0) winPct = 0;
+      if (winPct > 100) winPct = 100;
+      const housePct = 100 - winPct;
+      const source = document.getElementById('inpSourceInfo').value.trim() || 'Sorteo de la ONCE del día 15';
+
+      state.winnerPct = winPct;
+      state.housePct = housePct;
+      state.lotterySource = source;
+      saveLocalData(state);
+      render();
+
+      try {
+        await Promise.all([
+          fetch(currentDbUrl + '/winnerPct.json', { method: 'PUT', body: JSON.stringify(winPct) }),
+          fetch(currentDbUrl + '/housePct.json', { method: 'PUT', body: JSON.stringify(housePct) }),
+          fetch(currentDbUrl + '/lotterySource.json', { method: 'PUT', body: JSON.stringify(source) })
+        ]);
+        btn.innerText = '✅ ¡Guardado!';
+        setTimeout(() => { btn.innerText = '💾 Guardar Porcentajes'; btn.disabled = false; }, 2000);
+        alert('✅ ¡Porcentajes actualizados correctamente en todos los teléfonos!');
+      } catch (err) {
+        btn.innerText = '💾 Guardar Porcentajes';
+        btn.disabled = false;
+        alert('Ajustes guardados localmente.');
+      }
+    }
+
+    async function savePaymentSettings() {
+      const btn = document.getElementById('btnSavePayment');
+      btn.disabled = true;
+      btn.innerText = 'Guardando...';
+      const bizum = document.getElementById('inpBizumPhone').value.trim() || 'Consultar Directiva';
+      const iban = document.getElementById('inpBankAccount').value.trim() || 'Consultar Directiva';
+      state.bizumPhone = bizum;
+      state.bankAccount = iban;
+      saveLocalData(state);
+      render();
+      try {
+        await Promise.all([
+          fetch(currentDbUrl + '/bizumPhone.json', { method: 'PUT', body: JSON.stringify(bizum) }),
+          fetch(currentDbUrl + '/bankAccount.json', { method: 'PUT', body: JSON.stringify(iban) })
+        ]);
+        btn.innerText = '✅ ¡Guardado!';
+        setTimeout(() => { btn.innerText = '💾 Guardar Bizum y Cuenta'; btn.disabled = false; }, 2000);
+        alert('✅ ¡Datos de Bizum y Cuenta guardados!');
+      } catch (err) {
+        btn.innerText = '💾 Guardar Bizum y Cuenta';
+        btn.disabled = false;
+        alert('Guardado localmente.');
+      }
+    }
+
+    function copyPaymentData(elementId, label) {
+      const text = document.getElementById(elementId).innerText;
+      if (!text || text.includes('Consultar')) {
+        alert('La directiva aún no ha especificado este dato.');
+        return;
+      }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => alert('¡' + label + ' copiado al portapapeles!'));
+      } else {
+        const inp = document.createElement('input');
+        inp.value = text;
+        document.body.appendChild(inp);
+        inp.select();
+        document.execCommand('copy');
+        document.body.removeChild(inp);
+        alert('¡' + label + ' copiado al portapapeles!');
+      }
+    }
+
+    async function saveMonthlyWinner() {
+      const m = document.getElementById('selWinnerMonth').value;
+      const n = document.getElementById('inpWinningNum').value.trim();
+      try {
+        await fetch(currentDbUrl + '/winners/' + m + '.json', { method: 'PUT', body: JSON.stringify(n) });
+      } catch (e) {}
+      if (!state.winners) state.winners = {};
+      state.winners[m] = n;
+      saveLocalData(state);
+      render();
+      alert('Ganador guardado para el mes.');
+    }
+
+    function exportToCSV() {
+      const p = state.participants || {};
+      const curMonthName = MONTHS[state.currentMonthIdx || 0];
+      let csv = 'Numero,Alias,Nombre,Telefono,Estado (' + curMonthName + '),Meses Adelantados,Meses Cubiertos,Importe Cubierto (€)\r\n';
+      Object.keys(p).sort((a,b)=>a-b).forEach(k => {
+        const item = p[k];
+        const months = getEffectiveMonthsPaid(item);
+        const status = months > 0 ? 'PAGADO' : 'IMPAGADO';
+        const covered = getCoveredMonthsText(months);
+        const total = months * 5;
+        csv += '\"' + k + '\",\"' + (item.alias || '') + '\",\"' + (item.fullName || '') + '\",\"' + (item.phone || '') + '\",\"' + status + '\",\"' + months + '\",\"' + covered + '\",\"' + total + '€\"\r\n';
+      });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }));
+      a.download = 'pagos_albero_y_cal_' + curMonthName.toLowerCase() + '.csv';
+      a.click();
+    }
+
+    function shareOnWhatsApp() {
+      const text = '🏮 SORTEO CASETA ALBERO Y CAL 🏮\n¡Elige tu número aquí!:\n' + window.location.href;
+      window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(text), '_blank');
+    }
+    function copyAppShareLink() { navigator.clipboard.writeText(window.location.href).then(() => alert('Enlace copiado.')); }
+    
+    function escapeHTML(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // REGISTRO DE PWA Y GESTIÓN DE INSTALACIÓN (iOS / ANDROID)
+    let deferredInstallPrompt = null;
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+    });
+    function triggerInstallApp() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.then(() => { deferredInstallPrompt = null; });
+        return;
+      }
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS) {
+        alert('📲 INSTALAR EN IPHONE / IPAD:\n\n1. Pulsa el botón Compartir (cuadrado con flecha hacia arriba ⬆️) en la barra inferior de Safari.\n2. Baja y selecciona «Añadir a pantalla de inicio».\n3. Pulsa «Añadir» arriba a la derecha.\n\n¡Tendrás el icono de Albero y Cal en tu pantalla funcionando como una app nativa y conectada en tiempo real!');
+      } else {
+        alert('📲 INSTALAR EN ANDROID:\n\n1. Toca el menú de los 3 puntos (⋮) arriba a la derecha en Chrome.\n2. Selecciona «Instalar aplicación» o «Añadir a pantalla de inicio».\n\n¡Se instalará con su propio icono y sincronizada online!');
+      }
+    }
+
+    // EJECUCIÓN INICIAL: RENDER INMEDIATO + SINCRONIZACIÓN NUBE
+    render();
+    syncWithCloud();
+    setInterval(syncWithCloud, 4000);
+  </script>
+</body>
+</html>
